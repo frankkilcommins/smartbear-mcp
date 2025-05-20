@@ -1,0 +1,27 @@
+{
+  "name": "@modelcontextprotocol/server-smartbear",
+  "version": "0.0.1",
+  "description": "MCP server for interacting SmartBear Products",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "mcp-server-smartbear": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc && shx chmod +x dist/*.js",
+    "prepare": "npm run build",
+    "watch": "tsc --watch"
+  },
+  "dependencies": {
+    "@bugsnag/js": "^8.2.0",
+    "@modelcontextprotocol/sdk": "1.12.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22",
+    "shx": "^0.3.4",
+    "typescript": "^5.6.2"
+  }
+}
