@@ -7,7 +7,7 @@ import {
   ListToolsRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { ReflectClient } from "./reflect/client.js";
+import { cancelReflectSuiteExecutionTool, listReflectSuiteExecutionsTool, listReflectSuitesTool, listReflectTestsTool, ReflectClient, reflectSuiteExecutionStatusTool, reflectSuiteExecutionTool, reflectTestStatusTool, runReflectTestsTool, suiteArgs, suiteExecutionArgs, testArgs, testExecutionArgs } from "./reflect/client.js";
 
 // Type definitions for tool arguments
 interface echoArgs {
@@ -27,16 +27,6 @@ const echoTool: Tool = {
       },
     },
     required: ["input"],
-  },
-};
-
-const listReflectSuitesTool: Tool = {
-  name: "list_reflect_suites",
-  description: "List all reflect suites",
-  inputSchema: {
-    type: "object",
-    properties: {
-    },
   },
 };
 
@@ -84,8 +74,87 @@ async function main() {
             };
           }
 
-          case "list_reflect_suits": {
+          case "list_reflect_suites": {
             const response = await reflectClient.listReflectSuits();
+            return {
+              content: [{ type: "text", text: JSON.stringify(response) }],
+            };
+          }
+
+          case "list_reflect_suite_executions": {
+            const args = request.params
+              .arguments as unknown as suiteArgs;
+            if (!args.suiteId) {
+              throw new Error("suiteId argument is required");
+            }
+            const response = await reflectClient.listSuiteExecutions(args.suiteId);
+            return {
+              content: [{ type: "text", text: JSON.stringify(response) }],
+            };
+          }
+
+          case "reflect_suite_execution": {
+            const args = request.params
+              .arguments as unknown as suiteArgs;
+            if (!args.suiteId) {
+              throw new Error("suiteId argument is required");
+            }
+            const response = await reflectClient.executeSuite(args.suiteId);
+            return {
+              content: [{ type: "text", text: JSON.stringify(response) }],
+            };
+          }
+
+          case "reflect_suite_execution_status": {
+            const args = request.params
+              .arguments as unknown as suiteExecutionArgs;
+            if (!args.suiteId || !args.executionId) {
+              throw new Error("Both suiteId and executionId arguments are required");
+            }
+            const response = await reflectClient.getSuiteExecutionStatus(args.suiteId, args.executionId);
+            return {
+              content: [{ type: "text", text: JSON.stringify(response) }],
+            };
+          }
+
+          case "cancel_reflect_suite_execution": {
+            const args = request.params
+              .arguments as unknown as suiteExecutionArgs;
+            if (!args.suiteId || !args.executionId) {
+              throw new Error("Both suiteId and executionId arguments are required");
+            }
+            const response = await reflectClient.cancelSuiteExecution(args.suiteId, args.executionId);
+            return {
+              content: [{ type: "text", text: JSON.stringify(response) }],
+            };
+          }
+
+          case "list_reflect_tests": {
+            const response = await reflectClient.listReflectTests();
+            return {
+              content: [{ type: "text", text: JSON.stringify(response) }],
+            };
+          }
+
+          case "run_reflect_test": {
+            const args = request.params
+              .arguments as unknown as testArgs;
+            if (!args.testId) {
+              throw new Error("testId argument is required");
+            }
+            const response = await reflectClient.runReflectTest(args.testId);
+            return {
+              content: [{ type: "text", text: JSON.stringify(response) }],
+            };
+          }
+
+          case "reflect_test_status": {
+            const args = request.params
+              .arguments as unknown as testExecutionArgs;
+            if (!args.testId || !args.executionId) {
+              throw new Error("Both testId and executionId arguments are required");
+            }
+            const response = await reflectClient.getReflectTestStatus(args.testId, args.executionId);
             return {
               content: [{ type: "text", text: JSON.stringify(response) }],
             };
@@ -115,7 +184,14 @@ async function main() {
     return {
       tools: [
         echoTool,
-        listReflectSuitesTool
+        listReflectSuitesTool,
+        listReflectSuiteExecutionsTool,
+        reflectSuiteExecutionStatusTool,
+        reflectSuiteExecutionTool,
+        cancelReflectSuiteExecutionTool,
+        listReflectTestsTool,
+        runReflectTestsTool,
+        reflectTestStatusTool
       ],
     };
   });
@@ -124,7 +200,7 @@ async function main() {
   console.error("Connecting server to transport...");
   await server.connect(transport);
 
-  console.error("Slack MCP Server running on stdio");
+  console.error("SmartBear MCP Server running...");
 }
 
 main().catch((error) => {
