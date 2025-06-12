@@ -27,118 +27,6 @@ export interface ToolWithImplementation {
 
 // Tool definitions
 
-const listReflectSuiteExecutionsTool: Tool = {
-  name: "list_reflect_suite_executions",
-  description: "List all executions for a given reflect suite",
-  inputSchema: {
-    type: "object",
-    properties: {
-      suiteId: {
-        type: "string",
-        description: "ID of the reflect suite to list executions for",
-      },
-    },
-    required: ["suiteId"]
-  }
-};
-
-const reflectSuiteExecutionStatusTool: Tool = {
-  name: "reflect_suite_execution_status",
-  description: "Get the status of a reflect suite execution",
-  inputSchema: {
-    type: "object",
-    properties: {
-      suiteId: {
-        type: "string",
-        description: "ID of the reflect suite to list executions for",
-      },
-      executionId: {
-        type: "string",
-        description: "ID of the reflect suite execution to get status for",
-      },
-    },
-    required: ["suiteId", "executionId"]
-  }
-};
-
-const reflectSuiteExecutionTool: Tool = {
-  name: "reflect_suite_execution",
-  description: "Execute a reflect suite",
-  inputSchema: {
-    type: "object",
-    properties: {
-      suiteId: {
-        type: "string",
-        description: "ID of the reflect suite to list executions for",
-      },
-    },
-    required: ["suiteId"]
-  },
-};
-
-const cancelReflectSuiteExecutionTool: Tool = {
-  name: "cancel_reflect_suite_execution",
-  description: "Cancel a reflect suite execution",
-  inputSchema: {
-    type: "object",
-    properties: {
-      suiteId: {
-        type: "string",
-        description: "ID of the reflect suite to cancel execution for",
-      },
-      executionId: {
-        type: "string",
-        description: "ID of the reflect suite execution to cancel",
-      },
-    },
-    required: ["suiteId", "executionId"]
-  },
-};
-
-const listReflectTestsTool: Tool = {
-  name: "list_reflect_tests",
-  description: "List all reflect tests",
-  inputSchema: {
-    type: "object",
-    properties: {
-    },
-  },
-};
-
-const runReflectTestsTool: Tool = {
-  name: "run_reflect_test",
-  description: "Run a reflect test",
-  inputSchema: {
-    type: "object",
-    properties: {
-      testId: {
-        type: "string",
-        description: "ID of the reflect test to run",
-      },
-    },
-    required: ["testId"]
-  },
-};
-
-const reflectTestStatusTool: Tool = {
-  name: "reflect_test_status",
-  description: "Get the status of a reflect test execution",
-  inputSchema: {
-    type: "object",
-    properties: {
-      testId: {
-        type: "string",
-        description: "ID of the reflect test to run",
-      },
-      executionId: {
-        type: "string",
-        description: "ID of the reflect test execution to get status for",
-      },
-    },
-    required: ["testId", "executionId"]
-  },
-};
-
 export class ReflectClient implements ClientWithHandlers {
   private headers: { "X-API-KEY": string; "Content-Type": string };
 
@@ -255,7 +143,20 @@ export class ReflectClient implements ClientWithHandlers {
         },
       },
       {
-        tool: listReflectSuiteExecutionsTool,
+        tool: {
+          name: "list_reflect_suite_executions",
+          description: "List all executions for a given reflect suite",
+          inputSchema: {
+            type: "object",
+            properties: {
+              suiteId: {
+                type: "string",
+                description: "ID of the reflect suite to list executions for",
+              },
+            },
+            required: ["suiteId"]
+          }
+        },
         exec: async (request: CallToolRequest) => {
           const args = request.params.arguments as unknown as suiteArgs;
           if (!args.suiteId) {
@@ -268,7 +169,24 @@ export class ReflectClient implements ClientWithHandlers {
         },
       },
       {
-        tool: reflectSuiteExecutionStatusTool,
+        tool: {
+          name: "reflect_suite_execution_status",
+          description: "Get the status of a reflect suite execution",
+          inputSchema: {
+            type: "object",
+            properties: {
+              suiteId: {
+                type: "string",
+                description: "ID of the reflect suite to list executions for",
+              },
+              executionId: {
+                type: "string",
+                description: "ID of the reflect suite execution to get status for",
+              },
+            },
+            required: ["suiteId", "executionId"]
+          }
+        },
         exec: async (request: CallToolRequest) => {
           const args = request.params.arguments as unknown as suiteExecutionArgs;
           if (!args.suiteId || !args.executionId) {
@@ -281,7 +199,20 @@ export class ReflectClient implements ClientWithHandlers {
         },
       },
       {
-        tool: reflectSuiteExecutionTool,
+        tool: {
+          name: "reflect_suite_execution",
+          description: "Execute a reflect suite",
+          inputSchema: {
+            type: "object",
+            properties: {
+              suiteId: {
+                type: "string",
+                description: "ID of the reflect suite to list executions for",
+              },
+            },
+            required: ["suiteId"]
+          }
+        },
         exec: async (request: CallToolRequest) => {
           const args = request.params.arguments as unknown as suiteArgs;
           if (!args.suiteId) {
@@ -294,7 +225,24 @@ export class ReflectClient implements ClientWithHandlers {
         },
       },
       {
-        tool: cancelReflectSuiteExecutionTool,
+        tool: {
+          name: "cancel_reflect_suite_execution",
+          description: "Cancel a reflect suite execution",
+          inputSchema: {
+            type: "object",
+            properties: {
+              suiteId: {
+                type: "string",
+                description: "ID of the reflect suite to cancel execution for",
+              },
+              executionId: {
+                type: "string",
+                description: "ID of the reflect suite execution to cancel",
+              },
+            },
+            required: ["suiteId", "executionId"]
+          }
+        },
         exec: async (request: CallToolRequest) => {
           const args = request.params.arguments as unknown as suiteExecutionArgs;
           if (!args.suiteId || !args.executionId) {
@@ -307,7 +255,14 @@ export class ReflectClient implements ClientWithHandlers {
         },
       },
       {
-        tool: listReflectTestsTool,
+        tool: {
+          name: "list_reflect_tests",
+          description: "List all reflect tests",
+          inputSchema: {
+            type: "object",
+            properties: {}
+          }
+        },
         exec: async () => {
           const response = await this.listReflectTests();
           return {
@@ -316,7 +271,20 @@ export class ReflectClient implements ClientWithHandlers {
         },
       },
       {
-        tool: runReflectTestsTool,
+        tool: {
+          name: "run_reflect_test",
+          description: "Run a reflect test",
+          inputSchema: {
+            type: "object",
+            properties: {
+              testId: {
+                type: "string",
+                description: "ID of the reflect test to run",
+              },
+            },
+            required: ["testId"]
+          }
+        },
         exec: async (request: CallToolRequest) => {
           const args = request.params.arguments as unknown as testArgs;
           if (!args.testId) {
@@ -329,7 +297,24 @@ export class ReflectClient implements ClientWithHandlers {
         },
       },
       {
-        tool: reflectTestStatusTool,
+        tool: {
+          name: "reflect_test_status",
+          description: "Get the status of a reflect test execution",
+          inputSchema: {
+            type: "object",
+            properties: {
+              testId: {
+                type: "string",
+                description: "ID of the reflect test to run",
+              },
+              executionId: {
+                type: "string",
+                description: "ID of the reflect test execution to get status for",
+              },
+            },
+            required: ["testId", "executionId"]
+          }
+        },
         exec: async (request: CallToolRequest) => {
           const args = request.params.arguments as unknown as testExecutionArgs;
           if (!args.testId || !args.executionId) {
