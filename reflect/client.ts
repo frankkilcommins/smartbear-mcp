@@ -1,4 +1,4 @@
-import { Tool, CallToolRequest } from "@modelcontextprotocol/sdk/types.js";
+import { Tool, CallToolRequest, CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { ClientWithHandlers, Handlers } from "../common/types.js";
 
 // Type definitions for tool arguments
@@ -20,16 +20,12 @@ export interface testExecutionArgs {
   executionId: string;
 }
 
+export interface ToolWithImplementation {
+  tool: Tool,
+  exec: (request: CallToolRequest) => Promise<CallToolResult>
+}
+
 // Tool definitions
-export const listReflectSuitesTool: Tool = {
-  name: "list_reflect_suites",
-  description: "List all reflect suites",
-  inputSchema: {
-    type: "object",
-    properties: {
-    }
-  }
-};
 
 export const listReflectSuiteExecutionsTool: Tool = {
   name: "list_reflect_suite_executions",
@@ -239,6 +235,28 @@ export class ReflectClient implements ClientWithHandlers {
     );
 
     return response.json();
+  }
+
+  getTools(): ToolWithImplementation[] {
+    return [
+      {
+        tool: {
+          name: "list_reflect_suites",
+          description: "List all reflect suites",
+          inputSchema: {
+            type: "object",
+            properties: {
+            }
+          }
+        },
+        exec: async () => {
+          const response = await this.listReflectSuits();
+          return {
+            content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        },
+      }
+    ];
   }
 
   getHandlers(): Handlers {
