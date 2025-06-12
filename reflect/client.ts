@@ -1,4 +1,5 @@
-import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { Tool, CallToolRequest } from "@modelcontextprotocol/sdk/types.js";
+import { ClientWithHandlers, Handlers } from "../common/types.js";
 
 // Type definitions for tool arguments
 export interface suiteArgs {
@@ -143,7 +144,7 @@ export const reflectTestStatusTool: Tool = {
   },
 };
 
-export class ReflectClient {
+export class ReflectClient implements ClientWithHandlers {
   private headers: { "X-API-KEY": string; "Content-Type": string };
 
   constructor(token: string) {
@@ -238,5 +239,89 @@ export class ReflectClient {
     );
 
     return response.json();
+  }
+
+  getHandlers(): Handlers {
+    return {
+      list_reflect_suites: async () => {
+        const response = await this.listReflectSuits();
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      },
+
+      list_reflect_suite_executions: async (request: CallToolRequest) => {
+        const args = request.params.arguments as unknown as suiteArgs;
+        if (!args.suiteId) {
+          throw new Error("suiteId argument is required");
+        }
+        const response = await this.listSuiteExecutions(args.suiteId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      },
+
+      reflect_suite_execution: async (request: CallToolRequest) => {
+        const args = request.params.arguments as unknown as suiteArgs;
+        if (!args.suiteId) {
+          throw new Error("suiteId argument is required");
+        }
+        const response = await this.executeSuite(args.suiteId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      },
+
+      reflect_suite_execution_status: async (request: CallToolRequest) => {
+        const args = request.params.arguments as unknown as suiteExecutionArgs;
+        if (!args.suiteId || !args.executionId) {
+          throw new Error("Both suiteId and executionId arguments are required");
+        }
+        const response = await this.getSuiteExecutionStatus(args.suiteId, args.executionId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      },
+
+      cancel_reflect_suite_execution: async (request: CallToolRequest) => {
+        const args = request.params.arguments as unknown as suiteExecutionArgs;
+        if (!args.suiteId || !args.executionId) {
+          throw new Error("Both suiteId and executionId arguments are required");
+        }
+        const response = await this.cancelSuiteExecution(args.suiteId, args.executionId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      },
+
+      list_reflect_tests: async () => {
+        const response = await this.listReflectTests();
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      },
+
+      run_reflect_test: async (request: CallToolRequest) => {
+        const args = request.params.arguments as unknown as testArgs;
+        if (!args.testId) {
+          throw new Error("testId argument is required");
+        }
+        const response = await this.runReflectTest(args.testId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      },
+
+      reflect_test_status: async (request: CallToolRequest) => {
+        const args = request.params.arguments as unknown as testExecutionArgs;
+        if (!args.testId || !args.executionId) {
+          throw new Error("Both testId and executionId arguments are required");
+        }
+        const response = await this.getReflectTestStatus(args.testId, args.executionId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      },
+    };
   }
 }
