@@ -8,6 +8,8 @@ import {
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { ReflectClient } from "./reflect/client.js";
+import { InsightHubClient } from "./insight-hub/client.js";
+import { ToolWithImplementation } from "./common/types.js";
 
 async function main() {
   console.error("Starting SmartBear MCP Server...");
@@ -33,7 +35,15 @@ async function main() {
     process.exit(1);
   }
 
-  const reflectClient = reflectToken ? new ReflectClient(reflectToken) : null;
+  const tools: ToolWithImplementation[] = []
+
+  if (reflectToken) {
+    tools.push(...new ReflectClient(reflectToken).getTools());
+  }
+
+  if (insightHubToken) {
+    tools.push(...new InsightHubClient(insightHubToken).getTools());
+  }
 
   server.setRequestHandler(
     CallToolRequestSchema,
@@ -44,16 +54,12 @@ async function main() {
           throw new Error("No arguments provided");
         }
 
-        const handlers = {
-          ...(reflectClient ? reflectClient.getHandlers() : {}),
-        };
-
-        const handler = handlers[request.params.name];
-        if (!handler) {
+        const tool = tools.find(({ tool }) => tool.name === request.params.name);
+        if (!tool) {
           throw new Error(`Unknown tool: ${request.params.name}`);
         }
 
-        return await handler(request);
+        return await tool.exec(request);
       } catch (error) {
         console.error("Error executing tool:", error);
         return {
@@ -72,10 +78,9 @@ async function main() {
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     console.error("Received ListToolsRequest");
-    const tools = reflectClient ? reflectClient.getTools().map(t => t.tool) : [];
-    return { tools };
+    return { tools: tools.map(({ tool }) => tool) };
   });
-
+ 
   const transport = new StdioServerTransport();
   console.error("Connecting server to transport...");
   await server.connect(transport);
