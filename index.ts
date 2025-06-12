@@ -7,7 +7,7 @@ import {
   ListToolsRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
-import { ReflectClient, cancelReflectSuiteExecutionTool, listReflectSuiteExecutionsTool, listReflectSuitesTool, listReflectTestsTool, reflectSuiteExecutionStatusTool, reflectSuiteExecutionTool, reflectTestStatusTool, runReflectTestsTool } from "./reflect/client.js";
+import { ReflectClient } from "./reflect/client.js";
 
 async function main() {
   console.error("Starting SmartBear MCP Server...");
@@ -72,18 +72,8 @@ async function main() {
 
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     console.error("Received ListToolsRequest");
-    return {
-      tools: [
-        listReflectSuitesTool,
-        listReflectSuiteExecutionsTool,
-        reflectSuiteExecutionStatusTool,
-        reflectSuiteExecutionTool,
-        cancelReflectSuiteExecutionTool,
-        listReflectTestsTool,
-        runReflectTestsTool,
-        reflectTestStatusTool
-      ],
-    };
+    const tools = reflectClient ? reflectClient.getTools().map(t => t.tool) : [];
+    return { tools };
   });
 
   const transport = new StdioServerTransport();

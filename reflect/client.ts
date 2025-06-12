@@ -27,7 +27,7 @@ export interface ToolWithImplementation {
 
 // Tool definitions
 
-export const listReflectSuiteExecutionsTool: Tool = {
+const listReflectSuiteExecutionsTool: Tool = {
   name: "list_reflect_suite_executions",
   description: "List all executions for a given reflect suite",
   inputSchema: {
@@ -42,7 +42,7 @@ export const listReflectSuiteExecutionsTool: Tool = {
   }
 };
 
-export const reflectSuiteExecutionStatusTool: Tool = {
+const reflectSuiteExecutionStatusTool: Tool = {
   name: "reflect_suite_execution_status",
   description: "Get the status of a reflect suite execution",
   inputSchema: {
@@ -61,8 +61,7 @@ export const reflectSuiteExecutionStatusTool: Tool = {
   }
 };
 
-
-export const reflectSuiteExecutionTool: Tool = {
+const reflectSuiteExecutionTool: Tool = {
   name: "reflect_suite_execution",
   description: "Execute a reflect suite",
   inputSchema: {
@@ -77,7 +76,7 @@ export const reflectSuiteExecutionTool: Tool = {
   },
 };
 
-export const cancelReflectSuiteExecutionTool: Tool = {
+const cancelReflectSuiteExecutionTool: Tool = {
   name: "cancel_reflect_suite_execution",
   description: "Cancel a reflect suite execution",
   inputSchema: {
@@ -96,7 +95,7 @@ export const cancelReflectSuiteExecutionTool: Tool = {
   },
 };
 
-export const listReflectTestsTool: Tool = {
+const listReflectTestsTool: Tool = {
   name: "list_reflect_tests",
   description: "List all reflect tests",
   inputSchema: {
@@ -106,7 +105,7 @@ export const listReflectTestsTool: Tool = {
   },
 };
 
-export const runReflectTestsTool: Tool = {
+const runReflectTestsTool: Tool = {
   name: "run_reflect_test",
   description: "Run a reflect test",
   inputSchema: {
@@ -121,7 +120,7 @@ export const runReflectTestsTool: Tool = {
   },
 };
 
-export const reflectTestStatusTool: Tool = {
+const reflectTestStatusTool: Tool = {
   name: "reflect_test_status",
   description: "Get the status of a reflect test execution",
   inputSchema: {
@@ -245,12 +244,98 @@ export class ReflectClient implements ClientWithHandlers {
           description: "List all reflect suites",
           inputSchema: {
             type: "object",
-            properties: {
-            }
+            properties: {}
           }
         },
         exec: async () => {
           const response = await this.listReflectSuits();
+          return {
+            content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        },
+      },
+      {
+        tool: listReflectSuiteExecutionsTool,
+        exec: async (request: CallToolRequest) => {
+          const args = request.params.arguments as unknown as suiteArgs;
+          if (!args.suiteId) {
+            throw new Error("suiteId argument is required");
+          }
+          const response = await this.listSuiteExecutions(args.suiteId);
+          return {
+            content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        },
+      },
+      {
+        tool: reflectSuiteExecutionStatusTool,
+        exec: async (request: CallToolRequest) => {
+          const args = request.params.arguments as unknown as suiteExecutionArgs;
+          if (!args.suiteId || !args.executionId) {
+            throw new Error("Both suiteId and executionId arguments are required");
+          }
+          const response = await this.getSuiteExecutionStatus(args.suiteId, args.executionId);
+          return {
+            content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        },
+      },
+      {
+        tool: reflectSuiteExecutionTool,
+        exec: async (request: CallToolRequest) => {
+          const args = request.params.arguments as unknown as suiteArgs;
+          if (!args.suiteId) {
+            throw new Error("suiteId argument is required");
+          }
+          const response = await this.executeSuite(args.suiteId);
+          return {
+            content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        },
+      },
+      {
+        tool: cancelReflectSuiteExecutionTool,
+        exec: async (request: CallToolRequest) => {
+          const args = request.params.arguments as unknown as suiteExecutionArgs;
+          if (!args.suiteId || !args.executionId) {
+            throw new Error("Both suiteId and executionId arguments are required");
+          }
+          const response = await this.cancelSuiteExecution(args.suiteId, args.executionId);
+          return {
+            content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        },
+      },
+      {
+        tool: listReflectTestsTool,
+        exec: async () => {
+          const response = await this.listReflectTests();
+          return {
+            content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        },
+      },
+      {
+        tool: runReflectTestsTool,
+        exec: async (request: CallToolRequest) => {
+          const args = request.params.arguments as unknown as testArgs;
+          if (!args.testId) {
+            throw new Error("testId argument is required");
+          }
+          const response = await this.runReflectTest(args.testId);
+          return {
+            content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        },
+      },
+      {
+        tool: reflectTestStatusTool,
+        exec: async (request: CallToolRequest) => {
+          const args = request.params.arguments as unknown as testExecutionArgs;
+          if (!args.testId || !args.executionId) {
+            throw new Error("Both testId and executionId arguments are required");
+          }
+          const response = await this.getReflectTestStatus(args.testId, args.executionId);
           return {
             content: [{ type: "text", text: JSON.stringify(response) }],
           };
