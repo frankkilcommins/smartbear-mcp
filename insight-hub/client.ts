@@ -1,17 +1,10 @@
 import { CallToolRequest } from "@modelcontextprotocol/sdk/types.js";
 import { ClientWithTools, ToolWithImplementation } from "../common/types.js";
+import { CurrentUserApi, ProjectsApi, ErrorsApi, Configuration } from "./client/index.js";
 
 // Type definitions for tool arguments
 export interface ProjectArgs {
   projectId: string;
-}
-
-export interface DashboardArgs {
-  dashboardId: string;
-}
-
-export interface MetricArgs extends DashboardArgs {
-  metricId: string;
 }
 
 export interface OrgArgs {
@@ -23,96 +16,34 @@ export interface ErrorArgs extends ProjectArgs {
 }
 
 export class InsightHubClient implements ClientWithTools {
-  private headers: { "Authorization": string; "Content-Type": string };
-  private baseUrl: string = "https://api.bugsnag.com";
+  private currentUserApi: CurrentUserApi;
+  private projectsApi: ProjectsApi;
+  private errorsApi: ErrorsApi;
 
   constructor(token: string) {
-    this.headers = {
-      "Authorization": `token ${token}`,
-      "Content-Type": "application/json",
-    };
+    const config = new Configuration({
+      apiKey: `token ${token}`,
+      basePath: "https://api.bugsnag.com",
+    });
+    this.currentUserApi = new CurrentUserApi(config);
+    this.projectsApi = new ProjectsApi(config);
+    this.errorsApi = new ErrorsApi(config);
   }
 
   async listOrgs(): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/user/organizations`, {
-      method: "GET",
-      headers: this.headers,
-    });
-    return response.json();
+    return this.currentUserApi.listUserOrganizations();
   }
 
   async listProjects(orgId: string): Promise<any> {
-    const response = await fetch(`${this.baseUrl}/organizations/${orgId}/projects`, {
-      method: "GET",
-      headers: this.headers,
-    });
-    return response.json();
+    return this.currentUserApi.getOrganizationProjects(orgId);
   }
 
   async getErrorDetails(projectId: string, errorId: string): Promise<any> {
-    const response = await fetch(
-      `${this.baseUrl}/v1/projects/${projectId}/errors/${errorId}`,
-      {
-        method: "GET",
-        headers: this.headers,
-      }
-    );
-    return response.json();
+    return this.errorsApi.viewErrorOnProject(projectId, errorId);
   }
 
   async getLatestErrorEvent(projectId: string, errorId: string): Promise<any> {
-    const response = await fetch(
-      `${this.baseUrl}/v1/projects/${projectId}/errors/${errorId}/events/latest`,
-      {
-        method: "GET",
-        headers: this.headers,
-      }
-    );
-    return response.json();
-  }
-
-  async listDashboards(projectId: string): Promise<any> {
-    const response = await fetch(
-      `${this.baseUrl}/v1/projects/${projectId}/dashboards`,
-      {
-        method: "GET",
-        headers: this.headers,
-      }
-    );
-    return response.json();
-  }
-
-  async getDashboardMetrics(dashboardId: string): Promise<any> {
-    const response = await fetch(
-      `${this.baseUrl}/v1/dashboards/${dashboardId}/metrics`,
-      {
-        method: "GET",
-        headers: this.headers,
-      }
-    );
-    return response.json();
-  }
-
-  async getMetricDetails(dashboardId: string, metricId: string): Promise<any> {
-    const response = await fetch(
-      `${this.baseUrl}/v1/dashboards/${dashboardId}/metrics/${metricId}`,
-      {
-        method: "GET",
-        headers: this.headers,
-      }
-    );
-    return response.json();
-  }
-
-  async refreshDashboard(dashboardId: string): Promise<any> {
-    const response = await fetch(
-      `${this.baseUrl}/v1/dashboards/${dashboardId}/refresh`,
-      {
-        method: "POST",
-        headers: this.headers,
-      }
-    );
-    return response.json();
+    return this.errorsApi.viewLatestEventOnError(errorId);
   }
 
   getTools(): ToolWithImplementation[] {
@@ -214,114 +145,6 @@ export class InsightHubClient implements ClientWithTools {
             throw new Error("Both projectId and errorId arguments are required");
           }
           const response = await this.getLatestErrorEvent(args.projectId, args.errorId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "list_insight_hub_dashboards",
-          description: "List all dashboards for a project",
-          inputSchema: {
-            type: "object",
-            properties: {
-              projectId: {
-                type: "string",
-                description: "ID of the project to list dashboards for",
-              },
-            },
-            required: ["projectId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as ProjectArgs;
-          if (!args.projectId) {
-            throw new Error("projectId argument is required");
-          }
-          const response = await this.listDashboards(args.projectId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "get_insight_hub_dashboard_metrics",
-          description: "Get metrics for a dashboard",
-          inputSchema: {
-            type: "object",
-            properties: {
-              dashboardId: {
-                type: "string",
-                description: "ID of the dashboard to get metrics for",
-              },
-            },
-            required: ["dashboardId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as DashboardArgs;
-          if (!args.dashboardId) {
-            throw new Error("dashboardId argument is required");
-          }
-          const response = await this.getDashboardMetrics(args.dashboardId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "get_insight_hub_metric_details",
-          description: "Get details for a specific metric",
-          inputSchema: {
-            type: "object",
-            properties: {
-              dashboardId: {
-                type: "string",
-                description: "ID of the dashboard",
-              },
-              metricId: {
-                type: "string",
-                description: "ID of the metric to get details for",
-              },
-            },
-            required: ["dashboardId", "metricId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as MetricArgs;
-          if (!args.dashboardId || !args.metricId) {
-            throw new Error("Both dashboardId and metricId arguments are required");
-          }
-          const response = await this.getMetricDetails(args.dashboardId, args.metricId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "refresh_insight_hub_dashboard",
-          description: "Refresh a dashboard",
-          inputSchema: {
-            type: "object",
-            properties: {
-              dashboardId: {
-                type: "string",
-                description: "ID of the dashboard to refresh",
-              },
-            },
-            required: ["dashboardId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as DashboardArgs;
-          if (!args.dashboardId) {
-            throw new Error("dashboardId argument is required");
-          }
-          const response = await this.refreshDashboard(args.dashboardId);
           return {
             content: [{ type: "text", text: JSON.stringify(response) }],
           };
