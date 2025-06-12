@@ -23,17 +23,18 @@ export interface ErrorArgs extends ProjectArgs {
 }
 
 export class InsightHubClient implements ClientWithTools {
-  private headers: { "X-API-KEY": string; "Content-Type": string };
+  private headers: { "Authorization": string; "Content-Type": string };
+  private baseUrl: string = "https://api.bugsnag.com";
 
   constructor(token: string) {
     this.headers = {
-      "X-API-KEY": `${token}`,
+      "Authorization": `token ${token}`,
       "Content-Type": "application/json",
     };
   }
 
   async listOrgs(): Promise<any> {
-    const response = await fetch("https://api.insighthub.smartbear.com/v1/orgs", {
+    const response = await fetch(`${this.baseUrl}/user/organizations`, {
       method: "GET",
       headers: this.headers,
     });
@@ -41,7 +42,7 @@ export class InsightHubClient implements ClientWithTools {
   }
 
   async listProjects(orgId: string): Promise<any> {
-    const response = await fetch(`https://api.insighthub.smartbear.com/v1/orgs/${orgId}/projects`, {
+    const response = await fetch(`${this.baseUrl}/organizations/${orgId}/projects`, {
       method: "GET",
       headers: this.headers,
     });
@@ -50,7 +51,7 @@ export class InsightHubClient implements ClientWithTools {
 
   async getErrorDetails(projectId: string, errorId: string): Promise<any> {
     const response = await fetch(
-      `https://api.insighthub.smartbear.com/v1/projects/${projectId}/errors/${errorId}`,
+      `${this.baseUrl}/v1/projects/${projectId}/errors/${errorId}`,
       {
         method: "GET",
         headers: this.headers,
@@ -61,7 +62,7 @@ export class InsightHubClient implements ClientWithTools {
 
   async getLatestErrorEvent(projectId: string, errorId: string): Promise<any> {
     const response = await fetch(
-      `https://api.insighthub.smartbear.com/v1/projects/${projectId}/errors/${errorId}/events/latest`,
+      `${this.baseUrl}/v1/projects/${projectId}/errors/${errorId}/events/latest`,
       {
         method: "GET",
         headers: this.headers,
@@ -72,7 +73,7 @@ export class InsightHubClient implements ClientWithTools {
 
   async listDashboards(projectId: string): Promise<any> {
     const response = await fetch(
-      `https://api.insighthub.smartbear.com/v1/projects/${projectId}/dashboards`,
+      `${this.baseUrl}/v1/projects/${projectId}/dashboards`,
       {
         method: "GET",
         headers: this.headers,
@@ -83,7 +84,7 @@ export class InsightHubClient implements ClientWithTools {
 
   async getDashboardMetrics(dashboardId: string): Promise<any> {
     const response = await fetch(
-      `https://api.insighthub.smartbear.com/v1/dashboards/${dashboardId}/metrics`,
+      `${this.baseUrl}/v1/dashboards/${dashboardId}/metrics`,
       {
         method: "GET",
         headers: this.headers,
@@ -94,7 +95,7 @@ export class InsightHubClient implements ClientWithTools {
 
   async getMetricDetails(dashboardId: string, metricId: string): Promise<any> {
     const response = await fetch(
-      `https://api.insighthub.smartbear.com/v1/dashboards/${dashboardId}/metrics/${metricId}`,
+      `${this.baseUrl}/v1/dashboards/${dashboardId}/metrics/${metricId}`,
       {
         method: "GET",
         headers: this.headers,
@@ -105,7 +106,7 @@ export class InsightHubClient implements ClientWithTools {
 
   async refreshDashboard(dashboardId: string): Promise<any> {
     const response = await fetch(
-      `https://api.insighthub.smartbear.com/v1/dashboards/${dashboardId}/refresh`,
+      `${this.baseUrl}/v1/dashboards/${dashboardId}/refresh`,
       {
         method: "POST",
         headers: this.headers,

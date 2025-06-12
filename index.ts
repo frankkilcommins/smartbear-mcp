@@ -5,7 +5,6 @@ import {
   CallToolRequest,
   CallToolRequestSchema,
   ListToolsRequestSchema,
-  Tool,
 } from "@modelcontextprotocol/sdk/types.js";
 import { ReflectClient } from "./reflect/client.js";
 import { InsightHubClient } from "./insight-hub/client.js";
@@ -26,11 +25,11 @@ async function main() {
   );
 
   const reflectToken = process.env.REFLECT_API_TOKEN;
-  const insightHubToken = process.env.INSIGHT_HUB_API_TOKEN;
+  const insightHubToken = process.env.INSIGHT_HUB_AUTH_TOKEN;
 
   if (!reflectToken && !insightHubToken) {
     console.error(
-      "Please set REFLECT_API_TOKEN or INSIGHT_HUB_API_TOKEN environment variables",
+      "Please set REFLECT_API_TOKEN or INSIGHT_HUB_AUTH_TOKEN environment variables",
     );
     process.exit(1);
   }
