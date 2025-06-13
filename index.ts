@@ -3,6 +3,9 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { ReflectClient } from "./reflect/client.js";
 import { InsightHubClient } from "./insight-hub/client.js";
+import Bugsnag from "./common/bugsnag.js";
+
+Bugsnag.start('f95104f7326ad5ca153b34406f6b78f7');
 
 async function main() {
   console.error("Starting SmartBear MCP Server...");
