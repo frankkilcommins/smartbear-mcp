@@ -136,7 +136,16 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
     "smartbear": {
       "type": "stdio",
       "command": "docker",
-      "args": ["run", "-i", "--rm", "mcp/smartbear"],
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "INSIGHT_HUB_AUTH_TOKEN",
+        "-e",
+        "REFLECT_API_TOKEN",
+        "mcp/smartbear"
+      ],
       "env": {
         "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
         "REFLECT_API_TOKEN": "${input:reflect_api_token}"
