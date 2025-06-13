@@ -1,25 +1,20 @@
 #!/usr/bin/env node
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
-import {
-  CallToolRequest,
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
 import { ReflectClient } from "./reflect/client.js";
 import { InsightHubClient } from "./insight-hub/client.js";
-import { ToolWithImplementation } from "./common/types.js";
 
 async function main() {
   console.error("Starting SmartBear MCP Server...");
-  const server = new Server(
+  const server = new McpServer(
     {
       name: "SmartBear MCP Server",
       version: "1.0.0",
     },
     {
       capabilities: {
-        tools: {},
+        resources: { listChanged: true }, // Server supports dynamic resource lists
+        tools: { listChanged: true }, // Server supports dynamic tool lists
       },
     },
   );
@@ -34,52 +29,20 @@ async function main() {
     process.exit(1);
   }
 
-  const tools: ToolWithImplementation[] = []
-
   if (reflectToken) {
-    tools.push(...new ReflectClient(reflectToken).getTools());
+    const reflectClient = new ReflectClient(reflectToken);
+    reflectClient.registerTools(server);
+    reflectClient.registerResources(server);
+    console.error("Reflect tools registered");
   }
 
   if (insightHubToken) {
-    tools.push(...new InsightHubClient(insightHubToken).getTools());
+    const insightHubClient = new InsightHubClient(insightHubToken);
+    insightHubClient.registerTools(server);
+    insightHubClient.registerResources(server);
+    console.error("Insight Hub tools registered");
   }
 
-  server.setRequestHandler(
-    CallToolRequestSchema,
-    async (request: CallToolRequest) => {
-      console.error("Received CallToolRequest:", request);
-      try {
-        if (!request.params.arguments) {
-          throw new Error("No arguments provided");
-        }
-
-        const tool = tools.find(({ tool }) => tool.name === request.params.name);
-        if (!tool) {
-          throw new Error(`Unknown tool: ${request.params.name}`);
-        }
-
-        return await tool.exec(request);
-      } catch (error) {
-        console.error("Error executing tool:", error);
-        return {
-          content: [
-            {
-              type: "text",
-              text: JSON.stringify({
-                error: error instanceof Error ? error.message : String(error),
-              }),
-            },
-          ],
-        };
-      }
-    },
-  );
-
-  server.setRequestHandler(ListToolsRequestSchema, async () => {
-    console.error("Received ListToolsRequest");
-    return { tools: tools.map(({ tool }) => tool) };
-  });
- 
   const transport = new StdioServerTransport();
   console.error("Connecting server to transport...");
   await server.connect(transport);
