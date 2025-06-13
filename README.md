@@ -20,7 +20,7 @@ MCP Server for the SmartBear APIs.
 To test the MCP server locally, you can use the following command:
 
 ```bash
-npm run build  
+npm run build
 npx @modelcontextprotocol/inspector -e REFLECT_API_TOKEN=[YOUR_KEY] node dist/index.js
 ```
 This will open an inspector window in your browser, where you can test the tools.

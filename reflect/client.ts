@@ -1,5 +1,6 @@
-import { CallToolRequest } from "@modelcontextprotocol/sdk/types.js";
-import { ClientWithTools, ToolWithImplementation } from "../common/types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { Client } from "../common/types.js";
+import { z } from "zod";
 
 // Type definitions for tool arguments
 export interface suiteArgs {
@@ -23,7 +24,7 @@ export interface testExecutionArgs {
 
 // Tool definitions
 
-export class ReflectClient implements ClientWithTools {
+export class ReflectClient implements Client {
   private headers: { "X-API-KEY": string; "Content-Type": string };
 
   constructor(token: string) {
@@ -120,208 +121,113 @@ export class ReflectClient implements ClientWithTools {
     return response.json();
   }
 
-  getTools(): ToolWithImplementation[] {
-    return [
-      {
-        tool: {
-          name: "list_reflect_suites",
-          description: "List all reflect suites",
-          inputSchema: {
-            type: "object",
-            properties: {}
-          }
-        },
-        exec: async () => {
-          const response = await this.listReflectSuits();
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "list_reflect_suite_executions",
-          description: "List all executions for a given reflect suite",
-          inputSchema: {
-            type: "object",
-            properties: {
-              suiteId: {
-                type: "string",
-                description: "ID of the reflect suite to list executions for",
-              },
-            },
-            required: ["suiteId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as suiteArgs;
-          if (!args.suiteId) {
-            throw new Error("suiteId argument is required");
-          }
-          const response = await this.listSuiteExecutions(args.suiteId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "reflect_suite_execution_status",
-          description: "Get the status of a reflect suite execution",
-          inputSchema: {
-            type: "object",
-            properties: {
-              suiteId: {
-                type: "string",
-                description: "ID of the reflect suite to list executions for",
-              },
-              executionId: {
-                type: "string",
-                description: "ID of the reflect suite execution to get status for",
-              },
-            },
-            required: ["suiteId", "executionId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as suiteExecutionArgs;
-          if (!args.suiteId || !args.executionId) {
-            throw new Error("Both suiteId and executionId arguments are required");
-          }
-          const response = await this.getSuiteExecutionStatus(args.suiteId, args.executionId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "reflect_suite_execution",
-          description: "Execute a reflect suite",
-          inputSchema: {
-            type: "object",
-            properties: {
-              suiteId: {
-                type: "string",
-                description: "ID of the reflect suite to list executions for",
-              },
-            },
-            required: ["suiteId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as suiteArgs;
-          if (!args.suiteId) {
-            throw new Error("suiteId argument is required");
-          }
-          const response = await this.executeSuite(args.suiteId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "cancel_reflect_suite_execution",
-          description: "Cancel a reflect suite execution",
-          inputSchema: {
-            type: "object",
-            properties: {
-              suiteId: {
-                type: "string",
-                description: "ID of the reflect suite to cancel execution for",
-              },
-              executionId: {
-                type: "string",
-                description: "ID of the reflect suite execution to cancel",
-              },
-            },
-            required: ["suiteId", "executionId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as suiteExecutionArgs;
-          if (!args.suiteId || !args.executionId) {
-            throw new Error("Both suiteId and executionId arguments are required");
-          }
-          const response = await this.cancelSuiteExecution(args.suiteId, args.executionId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "list_reflect_tests",
-          description: "List all reflect tests",
-          inputSchema: {
-            type: "object",
-            properties: {}
-          }
-        },
-        exec: async () => {
-          const response = await this.listReflectTests();
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "run_reflect_test",
-          description: "Run a reflect test",
-          inputSchema: {
-            type: "object",
-            properties: {
-              testId: {
-                type: "string",
-                description: "ID of the reflect test to run",
-              },
-            },
-            required: ["testId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as testArgs;
-          if (!args.testId) {
-            throw new Error("testId argument is required");
-          }
-          const response = await this.runReflectTest(args.testId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
-      },
-      {
-        tool: {
-          name: "reflect_test_status",
-          description: "Get the status of a reflect test execution",
-          inputSchema: {
-            type: "object",
-            properties: {
-              testId: {
-                type: "string",
-                description: "ID of the reflect test to run",
-              },
-              executionId: {
-                type: "string",
-                description: "ID of the reflect test execution to get status for",
-              },
-            },
-            required: ["testId", "executionId"]
-          }
-        },
-        exec: async (request: CallToolRequest) => {
-          const args = request.params.arguments as unknown as testExecutionArgs;
-          if (!args.testId || !args.executionId) {
-            throw new Error("Both testId and executionId arguments are required");
-          }
-          const response = await this.getReflectTestStatus(args.testId, args.executionId);
-          return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
-          };
-        },
+  registerTools(server: McpServer): void {
+    server.tool(
+      "list_reflect_suites",
+      "List all reflect suites",
+      {},
+      async (_args, _extra) => {
+        const response = await this.listReflectSuits();
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
       }
-    ];
+    );
+    server.tool(
+      "list_reflect_suite_executions",
+      "List all executions for a given reflect suite",
+      { suiteId: z.string().describe("ID of the reflect suite to list executions for") },
+      async (args, _extra) => {
+        if (!args.suiteId) throw new Error("suiteId argument is required");
+        const response = await this.listSuiteExecutions(args.suiteId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      }
+    );
+    server.tool(
+      "reflect_suite_execution_status",
+      "Get the status of a reflect suite execution",
+      {
+        suiteId: z.string().describe("ID of the reflect suite to list executions for"),
+        executionId: z.string().describe("ID of the reflect suite execution to get status for"),
+      },
+      async (args, _extra) => {
+        if (!args.suiteId || !args.executionId) throw new Error("Both suiteId and executionId arguments are required");
+        const response = await this.getSuiteExecutionStatus(args.suiteId, args.executionId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      }
+    );
+    server.tool(
+      "reflect_suite_execution",
+      "Execute a reflect suite",
+      { suiteId: z.string().describe("ID of the reflect suite to list executions for") },
+      async (args, _extra) => {
+        if (!args.suiteId) throw new Error("suiteId argument is required");
+        const response = await this.executeSuite(args.suiteId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      }
+    );
+    server.tool(
+      "cancel_reflect_suite_execution",
+      "Cancel a reflect suite execution",
+      {
+        suiteId: z.string().describe("ID of the reflect suite to cancel execution for"),
+        executionId: z.string().describe("ID of the reflect suite execution to cancel"),
+      },
+      async (args, _extra) => {
+        if (!args.suiteId || !args.executionId) throw new Error("Both suiteId and executionId arguments are required");
+        const response = await this.cancelSuiteExecution(args.suiteId, args.executionId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      }
+    );
+    server.tool(
+      "list_reflect_tests",
+      "List all reflect tests",
+      {},
+      async (_args, _extra) => {
+        const response = await this.listReflectTests();
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      }
+    );
+    server.tool(
+      "run_reflect_test",
+      "Run a reflect test",
+      { testId: z.string().describe("ID of the reflect test to run") },
+      async (args, _extra) => {
+        if (!args.testId) throw new Error("testId argument is required");
+        const response = await this.runReflectTest(args.testId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      }
+    );
+    server.tool(
+      "reflect_test_status",
+      "Get the status of a reflect test execution",
+      {
+        testId: z.string().describe("ID of the reflect test to run"),
+        executionId: z.string().describe("ID of the reflect test execution to get status for"),
+      },
+      async (args, _extra) => {
+        if (!args.testId || !args.executionId) throw new Error("Both testId and executionId arguments are required");
+        const response = await this.getReflectTestStatus(args.testId, args.executionId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      }
+    );
+  }
+
+  registerResources(server: McpServer): void {
+    // Reflect does not currently support dynamic resources
   }
 }
