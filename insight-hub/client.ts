@@ -49,17 +49,6 @@ export class InsightHubClient implements Client {
 
   registerTools(server: McpServer): void {
     server.tool(
-      "list_insight_hub_orgs",
-      "List all organizations",
-      {},
-      async (_args, _extra) => {
-        const response = await this.listOrgs();
-        return {
-          content: [{ type: "text", text: JSON.stringify(response) }],
-        };
-      }
-    );
-    server.tool(
       "list_insight_hub_projects",
       "List all projects in an organization",
       { orgId: z.string().describe("ID of the organization to list projects for") },
@@ -104,5 +93,16 @@ export class InsightHubClient implements Client {
   }
 
   registerResources(server: McpServer): void {
+    server.resource(
+      "insight_hub_orgs",
+      "insighthub://orgs",
+      { description: "List all organizations in Insight Hub", mimeType: "application/json" },
+      async (uri) => ({
+        contents: [{
+          uri: uri.href,
+          text: JSON.stringify(await this.listOrgs())
+        }]
+      })
+    );
   }
 }
