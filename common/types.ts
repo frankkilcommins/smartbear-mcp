@@ -1,18 +1,5 @@
-import { CallToolRequest, CallToolResult, Tool } from "@modelcontextprotocol/sdk/types.js";
-
-export interface Handler {
-    (request: CallToolRequest): Promise<{ content: Array<{ type: string; text: string }> }>;
-}
-
-export interface Handlers {
-    [key: string]: Handler;
-}
-
-export interface ToolWithImplementation {
-  tool: Tool,
-  exec: (request: CallToolRequest) => Promise<CallToolResult>
-}
-
-export interface ClientWithTools {
-    getTools(): ToolWithImplementation[];
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+export interface Client {
+    registerTools(server: McpServer): void;
+    registerResources(server: McpServer): void;
 }
