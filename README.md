@@ -82,9 +82,9 @@ This will open an inspector window in your browser, where you can test the tools
 
 Add the following configuration to `.vscode/mcp.json`, depending on the type you want to use:
 
-#### stdio
+#### NPX
 
-```
+```json
 {
   "inputs": [
       {
@@ -101,17 +101,78 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
       }
   ],
   "servers": {
-    "smartbear-mcp": {
+    "smartbear": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-smartbear"],
+      "env": {
+        "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
+        "REFLECT_API_TOKEN": "${input:reflect_api_token}"
+      }
+    }
+  }
+}
+```
+
+#### Docker
+
+```json
+{
+  "inputs": [
+      {
+         "id": "insight_hub_auth_token",
+         "type": "promptString",
+         "description": "InsightHub Auth Token",
+         "password": true
+      },
+      {
+         "id": "reflect_api_token",
+         "type": "promptString",
+         "description": "Reflect API Token",
+         "password": true
+      }
+  ],
+  "servers": {
+    "smartbear": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["run", "-i", "--rm", "mcp/smartbear"],
+      "env": {
+        "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
+        "REFLECT_API_TOKEN": "${input:reflect_api_token}"
+      }
+    }
+  }
+}
+```
+
+#### local
+
+```json
+{
+  "inputs": [
+      {
+         "id": "insight_hub_auth_token",
+         "type": "promptString",
+         "description": "InsightHub Auth Token",
+         "password": true
+      },
+      {
+         "id": "reflect_api_token",
+         "type": "promptString",
+         "description": "Reflect API Token",
+         "password": true
+      }
+  ],
+  "servers": {
+    "smartbear": {
       "type": "stdio",
       "command": "node",
-      "args":
-        [
-          "${workspaceFolder}/dist/index.js"
-        ],
+      "args": ["${workspaceFolder}/dist/index.js"],
 
       "env": {
         "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
-         "REFLECT_API_TOKEN": "${input:reflect_api_token}"
+        "REFLECT_API_TOKEN": "${input:reflect_api_token}"
       }
     }
   }
