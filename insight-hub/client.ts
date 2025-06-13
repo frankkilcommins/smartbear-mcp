@@ -35,8 +35,8 @@ export class InsightHubClient implements Client {
     return this.currentUserApi.listUserOrganizations();
   }
 
-  async listProjects(orgId: string): Promise<any> {
-    return this.currentUserApi.getOrganizationProjects(orgId);
+  async listProjects(orgId: string, q?: string): Promise<any> {
+    return this.currentUserApi.getOrganizationProjects(orgId, q);
   }
 
   async getErrorDetails(projectId: string, errorId: string): Promise<any> {
@@ -45,6 +45,10 @@ export class InsightHubClient implements Client {
 
   async getLatestErrorEvent(projectId: string, errorId: string): Promise<any> {
     return this.errorsApi.viewLatestEventOnError(errorId);
+  }
+
+  async getProjectEvent(projectId: string, eventId: string): Promise<any> {
+    return this.errorsApi.viewEventById(projectId, eventId);
   }
 
   registerTools(server: McpServer): void {
@@ -90,6 +94,31 @@ export class InsightHubClient implements Client {
         };
       }
     );
+    server.tool(
+      "get_insight_hub_event_details",
+      "Get details of a specific event on Insight Hub",
+      {
+        link: z.string().describe("Link to the event details"),
+      },
+      async (args, _extra) => {
+        // https://app.bugsnag.com/bugsnag/android-notifier-errors/errors/5dcfae11a81443001a67ca36?filters[error.status]=open&filters[event.since]=30d&event_id=684bfa1f012a59d8b3340000
+        if (!args.link) throw new Error("link argument is required");
+        const url = new URL(args.link);
+        const eventId = url.searchParams.get("event_id");
+        const projectName = url.pathname.split('/')[2];
+        if (!projectName || !eventId) throw new Error("Both projectName and eventId must be present in the link");
+
+        // get the project id from list of projects
+        const orgId = await this.currentUserApi.listUserOrganizations().then(orgs => orgs[0].id);
+        const projectId = await this.listProjects(orgId, projectName).then(projects => projects[0].id)
+
+
+        const response = await this.getProjectEvent(projectId, eventId);
+        return {
+          content: [{ type: "text", text: JSON.stringify(response) }],
+        };
+      }
+    )
   }
 
   registerResources(server: McpServer): void {
