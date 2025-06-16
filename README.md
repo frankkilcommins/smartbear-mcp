@@ -26,7 +26,7 @@ The MCP server provides access to the following Reflect tools:
    - Get the status of a Reflect test execution.
 
 **Environment Variable:**
-- `REFLECT_API_TOKEN`: Required. The Bot User Auth Token for Reflect-based tools.
+- `REFLECT_API_TOKEN`: Required. The Reflect Account API Key for Reflect-based tools.
 
 ### Insight Hub
 
@@ -190,7 +190,7 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
 
 ### Environment Variables
 
-- `REFLECT_API_TOKEN`: Required for Reflect tools. The Bot User Auth Token for Reflect.
+- `REFLECT_API_TOKEN`: Required for Reflect tools. The Reflect Account API Key for Reflect-based tools.
 - `INSIGHT_HUB_AUTH_TOKEN`: Required for Insight Hub tools. The Auth Token for Insight Hub.
 
 ## Build
