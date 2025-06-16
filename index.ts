@@ -5,7 +5,12 @@ import { ReflectClient } from "./reflect/client.js";
 import { InsightHubClient } from "./insight-hub/client.js";
 import Bugsnag from "./common/bugsnag.js";
 
-Bugsnag.start('f95104f7326ad5ca153b34406f6b78f7');
+// This is used to report errors in the MCP server itself
+// If you want to use your own BugSnag API key, set the MCP_SERVER_BUGSNAG_API_KEY environment variable
+const McpServerBugsnagAPIKey = process.env.MCP_SERVER_BUGSNAG_API_KEY;
+if (McpServerBugsnagAPIKey) {
+  Bugsnag.start(McpServerBugsnagAPIKey);
+}
 
 async function main() {
   console.error("Starting SmartBear MCP Server...");

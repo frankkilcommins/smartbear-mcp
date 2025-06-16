@@ -192,6 +192,8 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
 
 - `REFLECT_API_TOKEN`: Required for Reflect tools. The Reflect Account API Key for Reflect-based tools.
 - `INSIGHT_HUB_AUTH_TOKEN`: Required for Insight Hub tools. The Auth Token for Insight Hub.
+- `MCP_SERVER_BUGSNAG_API_KEY`: Optional. If set, enables error reporting via BugSnag SDK.
+This is useful for debugging and monitoring the MCP server's performance and issues.
 
 ## Build
 
