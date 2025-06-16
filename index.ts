@@ -6,8 +6,8 @@ import { InsightHubClient } from "./insight-hub/client.js";
 import Bugsnag from "./common/bugsnag.js";
 
 // This is used to report errors in the MCP server itself
-// If you want to use your own BugSnag API key, set the MCP_SERVER_BUGSNAG_API_KEY environment variable
-const McpServerBugsnagAPIKey = process.env.MCP_SERVER_BUGSNAG_API_KEY;
+// If you want to use your own BugSnag API key, set the MCP_SERVER_INSIGHT_HUB_API_KEY environment variable
+const McpServerBugsnagAPIKey = process.env.MCP_SERVER_INSIGHT_HUB_API_KEY;
 if (McpServerBugsnagAPIKey) {
   Bugsnag.start(McpServerBugsnagAPIKey);
 }
