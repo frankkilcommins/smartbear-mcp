@@ -21,9 +21,7 @@ export interface testExecutionArgs {
   executionId: string;
 }
 
-
-// Tool definitions
-
+// ReflectClient class implementing the Client interface
 export class ReflectClient implements Client {
   private headers: { "X-API-KEY": string; "Content-Type": string };
 

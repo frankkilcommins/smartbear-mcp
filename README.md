@@ -61,6 +61,34 @@ The MCP server exposes several Insight Hub resources that can be accessed via th
 
 These resources can be accessed programmatically or through compatible MCP clients, and are useful for automation, integrations, or advanced workflows.
 
+### Swagger Hub
+
+The MCP server provides access to the following Reflect tools:
+
+1. `list_swaggerhub_portals`
+   - Search for available portals. Results are returned only for portals where you have a designer role, either at the product level or organization level.
+2. `create_swaggerhub_portal`
+   - Create a new portal.
+3. `get_swaggerhub_portal`
+   - Retrieve information about a portal.
+4. `delete_swaggerhub_portal`
+   - Delete a portal.
+5. `update_swaggerhub_portal`
+   - Update a portal.
+6. `list_swaggerhub_products`
+   - Get products for a specific portal that match your criteria.
+7. `create_swaggerhub_product`
+   - Create a new product for a specific portal.
+8. `get_swaggerhub_product`
+   - Retrieve information about a specific product resource.
+9. `delete_swaggerhub_product`
+   - Delete a product from a specific portal.
+10. `update_swaggerhub_product`
+    - Update a product in a specific portal.
+
+**Environment Variable:**
+- `SWAGGER_HUB_API_KEY`: Required. The Auth Token for Swagger Hub-based tools.
+
 ## Usage
 
 ### MCP Inspector
@@ -72,8 +100,10 @@ npm run build
 REFLECT_API_TOKEN=your_reflect_token npx @modelcontextprotocol/inspector node dist/index.js
 # For Insight Hub tools only:
 INSIGHT_HUB_AUTH_TOKEN=your_insight_hub_token npx @modelcontextprotocol/inspector node dist/index.js
-# For both Reflect and Insight Hub tools:
-REFLECT_API_TOKEN=your_reflect_token INSIGHT_HUB_AUTH_TOKEN=your_insight_hub_token npx @modelcontextprotocol/inspector node dist/index.js
+# For Swagger Hub tools only:
+SWAGGER_HUB_API_KEY=your_swagger_hub_token npx @modelcontextprotocol/inspector node dist/index.js
+# For Reflect, Insight Hub and Swagger Hub tools:
+REFLECT_API_TOKEN=your_reflect_token INSIGHT_HUB_AUTH_TOKEN=your_insight_hub_token SWAGGER_HUB_API_KEY=your_swagger_hub_token npx @modelcontextprotocol/inspector node dist/index.js
 ```
 
 This will open an inspector window in your browser, where you can test the tools.
@@ -98,6 +128,12 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
          "type": "promptString",
          "description": "Reflect API Token",
          "password": true
+      },
+      {
+         "id": "swagger_hub_api_key",
+         "type": "promptString",
+         "description": "SwaggerHub API Token",
+         "password": true
       }
   ],
   "servers": {
@@ -107,7 +143,8 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
       "args": ["-y", "@modelcontextprotocol/server-smartbear"],
       "env": {
         "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
-        "REFLECT_API_TOKEN": "${input:reflect_api_token}"
+        "REFLECT_API_TOKEN": "${input:reflect_api_token}",
+         "SWAGGER_HUB_API_KEY": "${input:swagger_hub_api_key}"
       }
     }
   }
@@ -130,6 +167,12 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
          "type": "promptString",
          "description": "Reflect API Token",
          "password": true
+      },
+      {
+         "id": "swagger_hub_api_key",
+         "type": "promptString",
+         "description": "SwaggerHub API Token",
+         "password": true
       }
   ],
   "servers": {
@@ -144,11 +187,14 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
         "INSIGHT_HUB_AUTH_TOKEN",
         "-e",
         "REFLECT_API_TOKEN",
+         "-e",
+         "SWAGGER_HUB_API_KEY",
         "mcp/smartbear"
       ],
       "env": {
         "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
-        "REFLECT_API_TOKEN": "${input:reflect_api_token}"
+        "REFLECT_API_TOKEN": "${input:reflect_api_token}",
+        "SWAGGER_HUB_API_KEY": "${input:swagger_hub_api_key}"
       }
     }
   }
@@ -171,6 +217,12 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
          "type": "promptString",
          "description": "Reflect API Token",
          "password": true
+      },
+      {
+         "id": "swagger_hub_api_key",
+         "type": "promptString",
+         "description": "SwaggerHub API Token",
+         "password": true
       }
   ],
   "servers": {
@@ -181,7 +233,8 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
 
       "env": {
         "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
-        "REFLECT_API_TOKEN": "${input:reflect_api_token}"
+        "REFLECT_API_TOKEN": "${input:reflect_api_token}",
+        "SWAGGER_HUB_API_KEY": "${input:swagger_hub_api_key}"
       }
     }
   }
@@ -192,6 +245,7 @@ Add the following configuration to `.vscode/mcp.json`, depending on the type you
 
 - `REFLECT_API_TOKEN`: Required for Reflect tools. The Reflect Account API Key for Reflect-based tools.
 - `INSIGHT_HUB_AUTH_TOKEN`: Required for Insight Hub tools. The Auth Token for Insight Hub.
+- `SWAGGER_HUB_API_KEY`: Required for Swagger Hub tools. The Auth Token for Swagger Hub-based tools.
 - `MCP_SERVER_INSIGHT_HUB_API_KEY`: Optional. If set, enables error reporting of the _MCP_server_ code via the BugSnag SDK. This is useful for debugging and monitoring of the MCP server itself and shouldn't be set to the same API key as your app.
 
 ## Build

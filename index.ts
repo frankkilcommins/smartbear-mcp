@@ -4,6 +4,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { ReflectClient } from "./reflect/client.js";
 import { InsightHubClient } from "./insight-hub/client.js";
 import Bugsnag from "./common/bugsnag.js";
+import { SwaggerHubClient } from "./swaggerhub-portal/client.js";
 
 // This is used to report errors in the MCP server itself
 // If you want to use your own BugSnag API key, set the MCP_SERVER_INSIGHT_HUB_API_KEY environment variable
@@ -13,7 +14,7 @@ if (McpServerBugsnagAPIKey) {
 }
 
 async function main() {
-  console.error("Starting SmartBear MCP Server...");
+  console.info("Starting SmartBear MCP Server...");
   const server = new McpServer(
     {
       name: "SmartBear MCP Server",
@@ -29,10 +30,11 @@ async function main() {
 
   const reflectToken = process.env.REFLECT_API_TOKEN;
   const insightHubToken = process.env.INSIGHT_HUB_AUTH_TOKEN;
+  const swaggerHubToken = process.env.SWAGGER_HUB_API_KEY;
 
-  if (!reflectToken && !insightHubToken) {
+  if (!reflectToken && !insightHubToken && !swaggerHubToken) {
     console.error(
-      "Please set REFLECT_API_TOKEN or INSIGHT_HUB_AUTH_TOKEN environment variables",
+      "Please set one of REFLECT_API_TOKEN, INSIGHT_HUB_AUTH_TOKEN or SWAGGER_HUB_API_KEY environment variables",
     );
     process.exit(1);
   }
@@ -41,21 +43,27 @@ async function main() {
     const reflectClient = new ReflectClient(reflectToken);
     reflectClient.registerTools(server);
     reflectClient.registerResources(server);
-    console.error("Reflect tools registered");
+    console.info("Reflect tools registered");
   }
 
   if (insightHubToken) {
     const insightHubClient = new InsightHubClient(insightHubToken);
     insightHubClient.registerTools(server);
     insightHubClient.registerResources(server);
-    console.error("Insight Hub tools registered");
+    console.info("Insight Hub tools registered");
+  }
+
+  if(swaggerHubToken) {
+    const swaggerHubClient = new SwaggerHubClient(swaggerHubToken);
+    swaggerHubClient.registerTools(server);
+    console.info("SwaggerHub tools registered");
   }
 
   const transport = new StdioServerTransport();
-  console.error("Connecting server to transport...");
+  console.info("Connecting server to transport...");
   await server.connect(transport);
 
-  console.error("SmartBear MCP Server running...");
+  console.info("SmartBear MCP Server running...");
 }
 
 main().catch((error) => {
