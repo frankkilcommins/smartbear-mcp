@@ -14,11 +14,14 @@ const customRules = {
   "@typescript-eslint/no-empty-object-type": "off"
 }
 
-const ignores = ["**/dist/**", "**/node_modules/**", "**/coverage/**"]
-
 export default defineConfig([
-  { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], plugins: { js }, extends: ["js/recommended"], ignores },
-  { files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], languageOptions: { globals: globals.node } },
+  { 
+    files: ["**/*.{js,mjs,cjs,ts,mts,cts}"], 
+    plugins: { js }, 
+    extends: ["js/recommended"], 
+    ignores: ["**/dist/**", "**/node_modules/**", "**/coverage/**"],
+    languageOptions: { globals: globals.node } 
+  },
   tseslint.configs.recommended,
-  { rules: customRules },
+  { rules: customRules }
 ]);
