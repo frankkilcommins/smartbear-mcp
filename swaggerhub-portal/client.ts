@@ -132,7 +132,7 @@ export class SwaggerHubClient implements Client {
   }
 
   async getSwaggerHubProduct(productId: string): Promise<any> {
-    const response = await fetch(`https://api.portal.swaggerhub.com/v1/portals/${productId}`, {
+    const response = await fetch(`https://api.portal.swaggerhub.com/v1/products/${productId}`, {
       method: "GET",
       headers: this.headers,
     });
@@ -141,14 +141,14 @@ export class SwaggerHubClient implements Client {
   }
 
   async deleteSwaggerHubProduct(productId: string): Promise<any> {
-    await fetch(`https://api.portal.swaggerhub.com/v1/portals/${productId}`, {
+    await fetch(`https://api.portal.swaggerhub.com/v1/products/${productId}`, {
       method: "DELETE",
       headers: this.headers,
     });
   }
 
   async updateSwaggerHubProduct(productId: string, body: updateProductArgs): Promise<any> {
-    const response = await fetch(`https://api.portal.swaggerhub.com/v1/portals/${productId}`, {
+    const response = await fetch(`https://api.portal.swaggerhub.com/v1/products/${productId}`, {
       method: "PATCH",
       headers: this.headers,
       body: JSON.stringify(body),
