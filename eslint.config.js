@@ -5,12 +5,8 @@ import { defineConfig } from "eslint/config";
 
 /** @type {import("eslint").Linter.RulesRecord} */
 const customRules = {
-  "no-redeclare": "off",
   "@typescript-eslint/no-explicit-any": "off", // (Explicit) any has its valid use cases
-  "@typescript-eslint/triple-slash-reference": "off",
-  "@typescript-eslint/no-namespace": "off",
-  "@typescript-eslint/no-empty-object-type": "off",
-  "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }]
+  "@typescript-eslint/no-unused-vars": ["error", { "argsIgnorePattern": "^_" }] // Allow unused arguments if they start with an underscore
 }
 
 export default defineConfig([
