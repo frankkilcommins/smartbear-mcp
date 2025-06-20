@@ -1,6 +1,6 @@
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { Client } from "../common/types.js";
-import { CurrentUserApi, ProjectsApi, ErrorsApi, Configuration } from "./client/index.js";
+import { CurrentUserAPI, ErrorAPI, Configuration } from "./client/index.js";
 import { z } from "zod";
 import Bugsnag from "../common/bugsnag.js";
 
@@ -18,33 +18,39 @@ export interface ErrorArgs extends ProjectArgs {
 }
 
 export class InsightHubClient implements Client {
-  private currentUserApi: CurrentUserApi;
-  private projectsApi: ProjectsApi;
-  private errorsApi: ErrorsApi;
+  private currentUserApi: CurrentUserAPI;
+  private errorsApi: ErrorAPI;
 
   constructor(token: string) {
     const config = new Configuration({
-      apiKey: `token ${token}`,
+      authToken: token,
+      headers: {
+        "User-Agent": "InsightHubMCPServer/1.0.0",
+        "Content-Type": "application/json",
+      },
       basePath: "https://api.bugsnag.com",
     });
-    this.currentUserApi = new CurrentUserApi(config);
-    this.projectsApi = new ProjectsApi(config);
-    this.errorsApi = new ErrorsApi(config);
+    this.currentUserApi = new CurrentUserAPI(config);
+    this.errorsApi = new ErrorAPI(config);
   }
 
   async listOrgs(): Promise<any> {
     return this.currentUserApi.listUserOrganizations();
   }
 
-  async listProjects(orgId: string, q?: string): Promise<any> {
-    return this.currentUserApi.getOrganizationProjects(orgId, q, undefined, undefined, 100);
+  async listProjects(orgId: string, options?: any ): Promise<any> {
+    options = {
+      ...options,
+      paginate: true
+    };
+    return this.currentUserApi.getOrganizationProjects(orgId, options);
   }
 
   async getErrorDetails(projectId: string, errorId: string): Promise<any> {
     return this.errorsApi.viewErrorOnProject(projectId, errorId);
   }
 
-  async getLatestErrorEvent(projectId: string, errorId: string): Promise<any> {
+  async getLatestErrorEvent(errorId: string): Promise<any> {
     return this.errorsApi.viewLatestEventOnError(errorId);
   }
 
@@ -100,13 +106,12 @@ registerTools(server: McpServer): void {
     "get_insight_hub_error_latest_event",
     "Get the latest event for an error",
     {
-      projectId: z.string().describe("ID of the project"),
       errorId: z.string().describe("ID of the error to get the latest event for"),
     },
     async (args, _extra) => {
       try {
-        if (!args.projectId || !args.errorId) throw new Error("Both projectId and errorId arguments are required");
-        const response = await this.getLatestErrorEvent(args.projectId, args.errorId);
+        if (!args.errorId) throw new Error("errorId argument is required");
+        const response = await this.getLatestErrorEvent(args.errorId);
         return {
           content: [{ type: "text", text: JSON.stringify(response) }],
         };
@@ -127,13 +132,13 @@ registerTools(server: McpServer): void {
         if (!args.link) throw new Error("link argument is required");
         const url = new URL(args.link);
         const eventId = url.searchParams.get("event_id");
-        const projectName = url.pathname.split('/')[2];
-        if (!projectName || !eventId) throw new Error("Both projectName and eventId must be present in the link");
+        const projectSlug = url.pathname.split('/')[2];
+        if (!projectSlug || !eventId) throw new Error("Both projectSlug and eventId must be present in the link");
 
         // get the project id from list of projects
         // limitation: this assumes a single page of results, so will not work for orgs with >100 projects
         const orgId = await this.currentUserApi.listUserOrganizations().then(orgs => orgs[0].id);
-        const projectId = await this.listProjects(orgId, projectName).then(projects => projects.find((p: any) => p.slug === projectName)?.id);
+        const projectId = await this.listProjects(orgId).then(projects => projects.find((p: any) => p.slug === projectSlug)?.id);
 
         const response = await this.getProjectEvent(projectId, eventId);
         return {
