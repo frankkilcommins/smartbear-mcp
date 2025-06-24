@@ -10,6 +10,9 @@
   "files": [
     "dist"
   ],
+  "config": {
+    "mcpServerName": "SmartBear MCP Server"
+  },
   "scripts": {
     "build": "tsc && shx chmod +x dist/*.js",
     "lint": "eslint . --ext .ts",
