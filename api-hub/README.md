@@ -8,7 +8,7 @@
 ## Tools
 
 1. `list_portals`
-   - Search for available portals within API Hub. Only for portals where you have at least a designer role, either at the product level or organization level, are returned.
+   - Search for available portals within API Hub. Only portals where you have at least a designer role, either at the product level or organization level, are returned.
 2. `create_portal`
    - Create a new portal within API Hub.
 3. `get_portal`

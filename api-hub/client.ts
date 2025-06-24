@@ -160,7 +160,7 @@ export class ApiHubClient implements Client {
   registerTools(server: McpServer): void {
     server.tool(
       "list_portals",
-      "Search for available portals within API Hub. Only for portals where you have at least a designer role, either at the product level or organization level, are returned.",
+      "Search for available portals within API Hub. Only portals where you have at least a designer role, either at the product level or organization level, are returned.",
       {},
       async (_args, _extra) => {
         const response = await this.getPortals();
