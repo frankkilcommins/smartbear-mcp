@@ -54,8 +54,8 @@ async function main() {
   }
 
   if(apiHubToken) {
-    const swaggerHubClient = new ApiHubClient(apiHubToken);
-    swaggerHubClient.registerTools(server);
+    const apiHubClient = new ApiHubClient(apiHubToken);
+    apiHubClient.registerTools(server);
     console.info("API Hub tools registered");
   }
 
