@@ -1,0 +1,33 @@
+{
+  "servers": {
+    "smartbear": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["/Users/frank.kilcommins/GitHub/smartbear-mcp/dist/index.js"],
+
+      "env": {
+        "API_HUB_API_KEY": "${input:api_hub_api_key}"
+      }
+    }
+  },
+  "inputs": [
+      {
+         "id": "insight_hub_auth_token",
+         "type": "promptString",
+         "description": "Insight Hub Auth Token",
+         "password": true
+      },
+      {
+         "id": "reflect_api_token",
+         "type": "promptString",
+         "description": "Reflect API Token",
+         "password": true
+      },
+      {
+         "id": "api_hub_api_key",
+         "type": "promptString",
+         "description": "API Hub API Key",
+         "password": true
+      }
+  ]
+}

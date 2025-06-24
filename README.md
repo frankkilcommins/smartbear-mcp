@@ -8,7 +8,7 @@
   <h1>SmartBear MCP server</h1>
 </div>
 
-An [MCP](https://modelcontextprotocol.io) server for SmartBear's API, Test and Insight Hubs.
+An [MCP](https://modelcontextprotocol.io) server for SmartBear's API Hub, Test Hub and Insight Hub.
 
 ## Build
 
@@ -37,7 +37,7 @@ Add the following configuration to `.vscode/mcp.json`, replacing `<PATH_TO_SMART
       "env": {
         "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
         "REFLECT_API_TOKEN": "${input:reflect_api_token}",
-        "SWAGGER_HUB_API_KEY": "${input:swagger_hub_api_key}"
+        "API_HUB_API_KEY": "${input:api_hub_api_key}"
       }
     }
   },
@@ -55,9 +55,9 @@ Add the following configuration to `.vscode/mcp.json`, replacing `<PATH_TO_SMART
          "password": true
       },
       {
-         "id": "swagger_hub_api_key",
+         "id": "api_hub_api_key",
          "type": "promptString",
-         "description": "Swagger Hub API Token",
+         "description": "API Hub API Key",
          "password": true
       }
   ]
@@ -69,7 +69,7 @@ Add the following configuration to `.vscode/mcp.json`, replacing `<PATH_TO_SMART
 To test the MCP server locally, you can use the following command (assuming a local build of the MCP server in the same location):
 
 ```bash
-REFLECT_API_TOKEN=your_reflect_token INSIGHT_HUB_AUTH_TOKEN=your_insight_hub_token SWAGGER_HUB_API_KEY=your_swagger_hub_token npx @modelcontextprotocol/inspector node dist/index.js
+REFLECT_API_TOKEN=your_reflect_token INSIGHT_HUB_AUTH_TOKEN=your_insight_hub_token API_HUB_API_KEY=your_api_hub_api_key npx @modelcontextprotocol/inspector node dist/index.js
 ```
 
 This will open an inspector window in your browser, where you can test the tools.
@@ -78,7 +78,7 @@ This will open an inspector window in your browser, where you can test the tools
 
 - `INSIGHT_HUB_AUTH_TOKEN`: Required for Insight Hub tools. The Auth Token for Insight Hub.
 - `REFLECT_API_TOKEN`: Required for Reflect tools. The Reflect Account API Key for Reflect-based tools.
-- `SWAGGER_HUB_API_KEY`: Required for Swagger Hub tools. The Auth Token for Swagger Hub-based tools.
+- `API_HUB_API_KEY`: Required for API Hub tools. The API Key for API Hub tools.
 - `MCP_SERVER_INSIGHT_HUB_API_KEY`: Optional. If set, enables error reporting of the _MCP_server_ code via the BugSnag SDK. This is useful for debugging and monitoring of the MCP server itself and shouldn't be set to the same API key as your app.
 
 ## Supported Tools
@@ -88,7 +88,7 @@ See individual guides for suggested prompts and supported tools and resources:
 - [Insight Hub](./insight-hub/README.md)\
   Get your top events and invite your LLM to help you fix them.
 - [Reflect](./reflect/README.md)
-- [SwaggerHub](./swaggerhub-portal/README.md)
+- [API Hub](./api-hub/README.md)
 
 ## License
 

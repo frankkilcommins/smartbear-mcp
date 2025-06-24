@@ -4,6 +4,7 @@ FROM node:22.12-alpine AS builder
 COPY common /app/common
 COPY reflect /app/reflect
 COPY insight-hub /app/insight-hub
+COPY api-hub /app/api-hub
 COPY index.ts /app/
 COPY package.json package-lock.json tsconfig.json /app/
 
