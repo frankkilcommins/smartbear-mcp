@@ -55,7 +55,6 @@ async function main() {
  if(apiHubToken) {
     const apiHubClient = new ApiHubClient(apiHubToken);
     apiHubClient.registerTools(server);
-    console.info("API Hub tools registered");
   }
 
   const transport = new StdioServerTransport();
