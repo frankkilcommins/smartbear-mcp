@@ -6,7 +6,7 @@ import Bugsnag from "./common/bugsnag.js";
 import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "./common/info.js";
 import { InsightHubClient } from "./insight-hub/client.js";
 import { ReflectClient } from "./reflect/client.js";
-import { SwaggerHubClient } from "./swaggerhub-portal/client.js";
+import { ApiHubClient } from "./api-hub/client.js";
 
 // This is used to report errors in the MCP server itself
 // If you want to use your own BugSnag API key, set the MCP_SERVER_INSIGHT_HUB_API_KEY environment variable
@@ -31,11 +31,11 @@ async function main() {
 
   const reflectToken = process.env.REFLECT_API_TOKEN;
   const insightHubToken = process.env.INSIGHT_HUB_AUTH_TOKEN;
-  const swaggerHubToken = process.env.SWAGGER_HUB_API_KEY;
+  const apiHubToken = process.env.API_HUB_API_KEY;
 
-  if (!reflectToken && !insightHubToken && !swaggerHubToken) {
+  if (!reflectToken && !insightHubToken && !apiHubToken) {
     console.error(
-      "Please set one of REFLECT_API_TOKEN, INSIGHT_HUB_AUTH_TOKEN or SWAGGER_HUB_API_KEY environment variables",
+      "Please set one of REFLECT_API_TOKEN, INSIGHT_HUB_AUTH_TOKEN or API_HUB_API_KEY environment variables",
     );
     process.exit(1);
   }
@@ -52,9 +52,9 @@ async function main() {
     insightHubClient.registerResources(server);
   }
 
-  if (swaggerHubToken) {
-    const swaggerHubClient = new SwaggerHubClient(swaggerHubToken);
-    swaggerHubClient.registerTools(server);
+ if(apiHubToken) {
+    const apiHubClient = new ApiHubClient(apiHubToken);
+    apiHubClient.registerTools(server);
   }
 
   const transport = new StdioServerTransport();

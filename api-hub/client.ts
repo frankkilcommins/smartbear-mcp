@@ -52,8 +52,8 @@ export interface updateProductArgs extends productArgs {
   hidden?: string;
 }
 
-// Tool definitions for SwaggerHub Portal API client
-export class SwaggerHubClient implements Client {
+// Tool definitions for API Hub API client
+export class ApiHubClient implements Client {
   private headers: { "Authorization": string; "Content-Type": string };
 
   constructor(token: string) {
@@ -63,7 +63,7 @@ export class SwaggerHubClient implements Client {
     };
   }
 
-  async getSwaggerHubPortals(): Promise<any> {
+  async getPortals(): Promise<any> {
     const response = await fetch("https://api.portal.swaggerhub.com/v1/portals", {
       method: "GET",
       headers: this.headers,
@@ -72,7 +72,7 @@ export class SwaggerHubClient implements Client {
     return response.json();
   }
 
-  async createSwaggerHubPortal(body: createPortalArgs): Promise<any> {
+  async createPortal(body: createPortalArgs): Promise<any> {
     const response = await fetch(`https://api.portal.swaggerhub.com/v1/portals`,
       {
         method: "POST",
@@ -84,7 +84,7 @@ export class SwaggerHubClient implements Client {
     return response.json();
   }
 
-  async getSwaggerHubPortal(portalId: string): Promise<any> {
+  async getPortal(portalId: string): Promise<any> {
     const response = await fetch(`https://api.portal.swaggerhub.com/v1/portals/${portalId}`, {
       method: "GET",
       headers: this.headers,
@@ -93,14 +93,14 @@ export class SwaggerHubClient implements Client {
     return response.json();
   }
 
-  async deleteSwaggerHubPortal(portalId: string): Promise<any> {
+  async deletePortal(portalId: string): Promise<any> {
     await fetch(`https://api.portal.swaggerhub.com/v1/portals/${portalId}`, {
       method: "DELETE",
       headers: this.headers,
     });
   }
 
-  async updateSwaggerHubPortal(portalId: string, body: updatePortalArgs): Promise<any> {
+  async updatePortal(portalId: string, body: updatePortalArgs): Promise<any> {
     const response = await fetch(`https://api.portal.swaggerhub.com/v1/portals/${portalId}`, {
       method: "PATCH",
       headers: this.headers,
@@ -110,7 +110,7 @@ export class SwaggerHubClient implements Client {
     return response.json();
   }
 
-  async getSwaggerHubProducts(portalId: string): Promise<any> {
+  async getPortalProducts(portalId: string): Promise<any> {
     const response = await fetch(`https://api.portal.swaggerhub.com/v1/portals/${portalId}/products`, {
       method: "GET",
       headers: this.headers,
@@ -119,7 +119,7 @@ export class SwaggerHubClient implements Client {
     return response.json();
   }
 
-  async createSwaggerHubProduct(portalId: string, body: createProductArgs): Promise<any> {
+  async createPortalProduct(portalId: string, body: createProductArgs): Promise<any> {
     const response = await fetch(`https://api.portal.swaggerhub.com/v1/portals/${portalId}/products`,
       {
         method: "POST",
@@ -131,7 +131,7 @@ export class SwaggerHubClient implements Client {
     return response.json();
   }
 
-  async getSwaggerHubProduct(productId: string): Promise<any> {
+  async getPortalProduct(productId: string): Promise<any> {
     const response = await fetch(`https://api.portal.swaggerhub.com/v1/products/${productId}`, {
       method: "GET",
       headers: this.headers,
@@ -140,14 +140,14 @@ export class SwaggerHubClient implements Client {
     return response.json();
   }
 
-  async deleteSwaggerHubProduct(productId: string): Promise<any> {
+  async deletePortalProduct(productId: string): Promise<any> {
     await fetch(`https://api.portal.swaggerhub.com/v1/products/${productId}`, {
       method: "DELETE",
       headers: this.headers,
     });
   }
 
-  async updateSwaggerHubProduct(productId: string, body: updateProductArgs): Promise<any> {
+  async updatePortalProduct(productId: string, body: updateProductArgs): Promise<any> {
     const response = await fetch(`https://api.portal.swaggerhub.com/v1/products/${productId}`, {
       method: "PATCH",
       headers: this.headers,
@@ -159,61 +159,61 @@ export class SwaggerHubClient implements Client {
 
   registerTools(server: McpServer): void {
     server.tool(
-      "list_swaggerhub_portals",
-      "Search for available portals. Results are returned only for portals where you have a designer role, either at the product level or organization level.",
+      "list_portals",
+      "Search for available portals within API Hub. Only portals where you have at least a designer role, either at the product level or organization level, are returned.",
       {},
       async (_args, _extra) => {
-        const response = await this.getSwaggerHubPortals();
+        const response = await this.getPortals();
         return {
           content: [{ type: "text", text: JSON.stringify(response) }],
         };
       },
     );
     server.tool(
-      "create_swaggerhub_portal",
-      "Create a new portal.",
+      "create_portal",
+      "Create a new portal within API Hub.",
       { 
         name: z.string().optional().describe("The portal name."), 
         subdomain: z.string().describe("The portal subdomain."), 
         offline: z.boolean().optional().describe("If set to true the portal will not be visible to customers."),
         routing: z.string().optional().describe("Determines the routing strategy ('browser' or 'proxy')."),
         credentialsEnabled: z.string().optional().describe("Indicates if credentials are enabled for the portal."),
-        swaggerHubOrganizationId: z.string().describe("The corresponding SwaggerHub organization UUID."),
+        swaggerHubOrganizationId: z.string().describe("The corresponding API Hub (formerly SwaggerHub) organization UUID."),
         openapiRenderer: z.string().optional().describe("Portal level setting for the OpenAPI renderer. SWAGGER_UI - Use the Swagger UI renderer. ELEMENTS - Use the Elements renderer. TOGGLE - Switch between the two renderers with elements set as the default."),
         pageContentFormat: z.string().optional().describe("The format of the page content.")
       },
       async (args: createPortalArgs, _extra) => {
-        const response = await this.createSwaggerHubPortal(args);
+        const response = await this.createPortal(args);
         return {
           content: [{ type: "text", text: JSON.stringify(response) }],
         };
       },
     );
     server.tool(
-      "get_swaggerhub_portal",
-      "Retrieve information about a portal.",
+      "get_portal",
+      "Retrieve information about a specific portal.",
       { portalId: z.string().describe("Portal UUID or subdomain.") },
       async (args: portalArgs, _extra) => {
-        const response = await this.getSwaggerHubPortal(args.portalId);
+        const response = await this.getPortal(args.portalId);
         return {
           content: [{ type: "text", text: JSON.stringify(response) }],
         };
       },
     );
     server.tool(
-      "delete_swaggerhub_portal",
+      "delete_portal",
       "Delete a portal.",
       { portalId: z.string().describe("Portal UUID or subdomain.") },
       async (args: portalArgs, _extra) => {
-        await this.deleteSwaggerHubPortal(args.portalId);
+        await this.deletePortal(args.portalId);
         return {
           content: [{ type: "text", text: "Portal deleted successfully." }],
         };
       },
     );
     server.tool(
-      "update_swaggerhub_portal",
-      "Update a portal.",
+      "update_portal",
+      "Update a specifc portal's configuration",
       {
         portalId: z.string().describe("Portal UUID or subdomain."),
         name: z.string().optional().describe("The portal name."),
@@ -227,25 +227,25 @@ export class SwaggerHubClient implements Client {
         pageContentFormat: z.string().optional().describe("The format of the page content.")
       },
       async (args: updatePortalArgs, _extra) => {
-        const response = await this.updateSwaggerHubPortal(args.portalId, args);
+        const response = await this.updatePortal(args.portalId, args);
         return {
           content: [{ type: "text", text: JSON.stringify(response) }],
         };
       },
     );
     server.tool(
-      "list_swaggerhub_products",
+      "list_portal_products",
       "Get products for a specific portal that match your criteria.",
       { portalId: z.string().describe("Portal UUID or subdomain.") },
       async (args: portalArgs, _extra) => {
-        const response = await this.getSwaggerHubProducts(args.portalId);
+        const response = await this.getPortalProducts(args.portalId);
         return {
           content: [{ type: "text", text: JSON.stringify(response) }],
         };
       },
     );
     server.tool(
-      "create_swaggerhub_product",
+      "create_portal_product",
       "Create a new product for a specific portal.",
       {
         portalId: z.string().describe("Portal UUID or subdomain."),
@@ -258,37 +258,37 @@ export class SwaggerHubClient implements Client {
         role: z.boolean().optional().describe("Indicates if the product has a role.")
       },
       async (args: createProductArgs, _extra) => {
-        const response = await this.createSwaggerHubProduct(args.portalId, args);
+        const response = await this.createPortalProduct(args.portalId, args);
         return {
           content: [{ type: "text", text: JSON.stringify(response) }],
         };
       },
     );
     server.tool(
-      "get_swaggerhub_product",
+      "get_portal_product",
       "Retrieve information about a specific product resource.",
       { productId: z.string().describe("Product UUID, or identifier in the format.") },
       async (args: productArgs, _extra) => {
-        const response = await this.getSwaggerHubProduct(args.productId);
+        const response = await this.getPortalProduct(args.productId);
         return {
           content: [{ type: "text", text: JSON.stringify(response) }],
         };
       },
     );
     server.tool(
-      "delete_swaggerhub_product",
-      "Delete a specific product resource.",
+      "delete_portal_product",
+      "Delete a product from a specific portal",
       { productId: z.string().describe("Product UUID, or identifier in the format.") },
       async (args: productArgs, _extra) => {
-        await this.deleteSwaggerHubProduct(args.productId);
+        await this.deletePortalProduct(args.productId);
         return {
           content: [{ type: "text", text: "Product deleted successfully." }],
         };
       },
     );
     server.tool(
-      "update_swaggerhub_product",
-      "Update a specific product resource.",
+      "update_portal_product",
+      "Update a product's settings within a specific portal.",
       {
         productId: z.string().describe("Product UUID, or identifier in the format."),
         name: z.string().optional().describe("Product name."),
@@ -298,7 +298,7 @@ export class SwaggerHubClient implements Client {
         hidden: z.string().optional().describe("Indicates if the product is hidden.")
       },
       async (args: updateProductArgs, _extra) => {
-        const response = await this.updateSwaggerHubProduct(args.productId, args);
+        const response = await this.updatePortalProduct(args.productId, args);
         return {
           content: [{ type: "text", text: JSON.stringify(response) }],
         };
