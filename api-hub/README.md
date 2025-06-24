@@ -26,4 +26,4 @@
 9. `delete_portal_product`
    - Delete a product from a specific portal.
 10. `update_portal_product`
-   - Update a product's settings within a specific portal.
+    - Update a product's settings within a specific portal.
