@@ -10,30 +10,24 @@
 
 An [MCP](https://modelcontextprotocol.io) server for SmartBear's API Hub, Test Hub and Insight Hub.
 
-## Build
-
-Checkout this repository and run the following to build the server:
-
-```bash
-npm run build
-```
-
 ## Usage
 
 The server is started with the API key or auth token that you use with your product(s). They are optional and can be removed from your configuration if you aren't using the product.
 
 ### VS Code
 
-Add the following configuration to `.vscode/mcp.json`, replacing `<PATH_TO_SMARTBEAR_MCP>` with the location of this repo on your filesystem:
+Add the following configuration to `.vscode/mcp.json`:
 
 ```json
 {
   "servers": {
     "smartbear": {
       "type": "stdio",
-      "command": "node",
-      "args": ["<PATH_TO_SMARTBEAR_MCP>/dist/index.js"],
-
+      "command": "npx",
+      "args": [
+        "-y",
+        "@smartbear/mcp"
+      ],
       "env": {
         "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
         "REFLECT_API_TOKEN": "${input:reflect_api_token}",
@@ -66,10 +60,10 @@ Add the following configuration to `.vscode/mcp.json`, replacing `<PATH_TO_SMART
 
 ### MCP Inspector
 
-To test the MCP server locally, you can use the following command (assuming a local build of the MCP server in the same location):
+To test the MCP server using the npm package, run:
 
 ```bash
-REFLECT_API_TOKEN=your_reflect_token INSIGHT_HUB_AUTH_TOKEN=your_insight_hub_token API_HUB_API_KEY=your_api_hub_api_key npx @modelcontextprotocol/inspector node dist/index.js
+REFLECT_API_TOKEN=your_reflect_token INSIGHT_HUB_AUTH_TOKEN=your_insight_hub_token API_HUB_API_KEY=your_api_hub_api_key npx @smartbear/mcp
 ```
 
 This will open an inspector window in your browser, where you can test the tools.
@@ -89,6 +83,49 @@ See individual guides for suggested prompts and supported tools and resources:
   Get your top events and invite your LLM to help you fix them.
 - [Reflect](./reflect/README.md)
 - [API Hub](./api-hub/README.md)
+
+## Local Development
+
+If you want to build and run the MCP server from source (for development or contribution):
+
+### Build
+
+Clone this repository and run:
+
+```bash
+npm install
+npm run build
+```
+
+### Usage (Local Build)
+
+Update your `.vscode/mcp.json` to point to your local build:
+
+```json
+{
+  "servers": {
+    "smartbear": {
+      "type": "stdio",
+      "command": "node",
+      "args": ["<PATH_TO_SMARTBEAR_MCP>/dist/index.js"],
+      "env": {
+        "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
+        "REFLECT_API_TOKEN": "${input:reflect_api_token}",
+        "API_HUB_API_KEY": "${input:api_hub_api_key}"
+      }
+    }
+  },
+  "inputs": [
+    // ...same as above...
+  ]
+}
+```
+
+Or run the server directly:
+
+```bash
+REFLECT_API_TOKEN=your_reflect_token INSIGHT_HUB_AUTH_TOKEN=your_insight_hub_token API_HUB_API_KEY=your_api_hub_api_key node dist/index.js
+```
 
 ## License
 
