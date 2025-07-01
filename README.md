@@ -16,7 +16,9 @@ The server is started with the API key or auth token that you use with your prod
 
 ### VS Code
 
-Add the following configuration to `.vscode/mcp.json`:
+Add the [`@smartbear/mcp`](https://www.npmjs.com/package/@smartbear/mcp) package to your project via NPM or via the "MCP: Add server…" command in VS Code.
+
+If setting up manually, add the following configuration to `.vscode/mcp.json`:
 
 ```json
 {
