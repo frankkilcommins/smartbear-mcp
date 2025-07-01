@@ -1,7 +1,6 @@
 # Changelog
 
 ## [0.1.1] - 2025-07-01
-- Fixed package.json to include correct bin entry for `mcp-server-smartbear`.
 - Updated README to reflect the correct package name and usage instructions.
 - Added more fields to package.json for better npm integration.
 
