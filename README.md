@@ -28,7 +28,7 @@ If setting up manually, add the following configuration to `.vscode/mcp.json`:
       "command": "npx",
       "args": [
         "-y",
-        "@smartbear/mcp"
+        "@smartbear/mcp@latest"
       ],
       "env": {
         "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
