@@ -48,6 +48,7 @@ async function main() {
 
   if (insightHubToken) {
     const insightHubClient = new InsightHubClient(insightHubToken);
+    await insightHubClient.initialize();
     insightHubClient.registerTools(server);
     insightHubClient.registerResources(server);
   }
