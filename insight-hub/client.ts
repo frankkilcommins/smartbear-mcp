@@ -6,8 +6,8 @@ import { z } from "zod";
 import Bugsnag from "../common/bugsnag.js";
 import NodeCache from "node-cache";
 import { Organization, Project } from "./client/api/CurrentUser.js";
-import { ProjectAPI } from "./client/api/Project.js";
-import { FilterObject } from "./client/api/filters.js";
+import { EventField, ProjectAPI } from "./client/api/Project.js";
+import { FilterObject, FilterObjectSchema } from "./client/api/filters.js";
 
 const cacheKeys = {
   ORG: "insight_hub_org",
@@ -130,7 +130,7 @@ export class InsightHubClient implements Client {
   }
 
   async listProjectErrors(projectId: string, filters?: FilterObject): Promise<any> {
-    return this.errorsApi.listProjectErrors(projectId, filters);
+    return this.errorsApi.listProjectErrors(projectId, { filters });
   }
 
   registerTools(server: McpServer): void {
@@ -243,7 +243,7 @@ export class InsightHubClient implements Client {
       "List errors in a project on Insight Hub based on a set of filters",
       {
         projectId: z.string().optional().describe("ID of the project"),
-        filters: filter
+        filters: FilterObjectSchema.optional().describe("Filters to apply to the error list"),
       },
       async (args, _extra) => {
         try {
@@ -251,9 +251,9 @@ export class InsightHubClient implements Client {
           if (!projectId) throw new Error("projectId argument is required");
           
           // Optionally, validate filter keys against cached event fields
-          const eventFields = this.cache.get<any[]>(cacheKeys.PROJECT_EVENT_FIELDS) || [];
+          const eventFields = this.cache.get<EventField[]>(cacheKeys.PROJECT_EVENT_FIELDS) || [];
           if (args.filters) {
-            const validKeys = new Set(eventFields.map(f => f.name));
+            const validKeys = new Set(eventFields.map(f => f.display_id));
             for (const key of Object.keys(args.filters)) {
               if (!validKeys.has(key)) {
                 throw new Error(`Invalid filter key: ${key}`);

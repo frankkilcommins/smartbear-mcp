@@ -4,6 +4,7 @@
  * This file provides utility functions for creating filter URL parameters
  * based on the Insight Hub filtering specification described in the Filtering.md document.
  */
+import { z } from "zod";
 
 /**
  * Types of filter comparison operations
@@ -32,6 +33,13 @@ export interface FilterValue {
 export interface FilterObject {
   [fieldName: string]: FilterValue[];
 }
+
+export const FilterValueSchema = z.object({
+  type: z.enum(['eq', 'ne', 'empty']),
+  value: z.union([z.string(), z.boolean(), z.number()]),
+});
+
+export const FilterObjectSchema = z.record(z.array(FilterValueSchema));
 
 /**
  * Creates a filter value object for equality comparison
@@ -109,9 +117,9 @@ export function toUrlSearchParams(filters: FilterObject): URLSearchParams {
   const params = new URLSearchParams();
   
   Object.entries(filters).forEach(([field, filterValues]) => {
-    filterValues.forEach((filterValue, index) => {
-      params.append(`filters[${field}][${index}][type]`, filterValue.type);
-      params.append(`filters[${field}][${index}][value]`, filterValue.value.toString());
+    filterValues.forEach((filterValue) => {
+      params.append(`filters[${field}][][type]`, filterValue.type);
+      params.append(`filters[${field}][][value]`, filterValue.value.toString());
     });
   });
   
