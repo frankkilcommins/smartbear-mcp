@@ -7,6 +7,7 @@ import Bugsnag from "../common/bugsnag.js";
 import NodeCache from "node-cache";
 import { Organization, Project } from "./client/api/CurrentUser.js";
 import { ProjectAPI } from "./client/api/Project.js";
+import { FilterObject } from "./client/api/filters.js";
 
 const cacheKeys = {
   ORG: "insight_hub_org",
@@ -128,6 +129,10 @@ export class InsightHubClient implements Client {
     return eventDetails.find(event => !!event);
   }
 
+  async listProjectErrors(projectId: string, filters?: FilterObject): Promise<any> {
+    return this.errorsApi.listProjectErrors(projectId, filters);
+  }
+
   registerTools(server: McpServer): void {
     server.tool(
       "list_insight_hub_projects",
@@ -223,6 +228,39 @@ export class InsightHubClient implements Client {
           }
 
           const response = await this.getProjectEvent(projectId, eventId);
+          return {
+            content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        } catch (e) {
+          Bugsnag.notify(e as unknown as Error);
+          throw e;
+        }
+      }
+    );
+    // Dynamically infer the filters schema from cached project event fields
+    server.tool(
+      "list_insight_hub_project_errors",
+      "List errors in a project on Insight Hub based on a set of filters",
+      {
+        projectId: z.string().optional().describe("ID of the project"),
+        filters: filter
+      },
+      async (args, _extra) => {
+        try {
+          const projectId = args.projectId || this.cache.get<Project>(cacheKeys.CURRENT_PROJECT)?.id;
+          if (!projectId) throw new Error("projectId argument is required");
+          
+          // Optionally, validate filter keys against cached event fields
+          const eventFields = this.cache.get<any[]>(cacheKeys.PROJECT_EVENT_FIELDS) || [];
+          if (args.filters) {
+            const validKeys = new Set(eventFields.map(f => f.name));
+            for (const key of Object.keys(args.filters)) {
+              if (!validKeys.has(key)) {
+                throw new Error(`Invalid filter key: ${key}`);
+              }
+            }
+          }
+          const response = await this.listProjectErrors(projectId, args.filters);
           return {
             content: [{ type: "text", text: JSON.stringify(response) }],
           };

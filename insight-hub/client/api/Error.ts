@@ -1,5 +1,6 @@
 import { BaseAPI } from './base.js';
 import { Configuration } from '../configuration.js';
+import { FilterObject, toQueryString } from './filters.js';
 
 // --- Response Types ---
 
@@ -47,7 +48,7 @@ export interface ListProjectErrorsOptions {
   sort?: 'last_seen' | 'first_seen' | 'users' | 'events' | 'unsorted';
   direction?: 'asc' | 'desc';
   per_page?: number;
-  filters?: any; // Filters object as defined in the API spec
+  filters?: FilterObject; // Filters object as defined in the API spec
   [key: string]: any;
 }
 
@@ -117,20 +118,9 @@ export class ErrorAPI extends BaseAPI {
    * GET /projects/{project_id}/errors
    */
   async listProjectErrors(projectId: string, options: ListProjectErrorsOptions = {}): Promise<ListProjectErrorsResponse> {
-    const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(options)) {
-      if (value !== undefined) {
-        if (key === 'filters' && typeof value === 'object') {
-          // Handle filters as JSON string if it's an object
-          params.append(key, JSON.stringify(value));
-        } else {
-          params.append(key, String(value));
-        }
-      }
-    }
-    const url = params.toString()
-      ? `/projects/${projectId}/errors?${params}`
-      : `/projects/${projectId}/errors`;
+    const url = options.filters
+      ? `/projects/${projectId}/errors?${toQueryString(options.filters)}`
+      : `/projects/${projectId}/errors`; 
     return (await this.request<ListProjectErrorsResponse>({
       method: 'GET',
       url,
