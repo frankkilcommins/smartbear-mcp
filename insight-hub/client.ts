@@ -13,7 +13,7 @@ const cacheKeys = {
   ORG: "insight_hub_org",
   PROJECTS: "insight_hub_projects",
   CURRENT_PROJECT: "insight_hub_current_project",
-  PROJECT_EVENT_FIELDS: "insight_hub_project_event_fields",
+  PROJECT_EVENT_FILTERS: "insight_hub_project_event_filters",
 }
 
 // Type definitions for tool arguments
@@ -71,7 +71,7 @@ export class InsightHubClient implements Client {
       if (!projectFields || projectFields.length === 0) {
         throw new Error(`No event fields found for project ${project.name}.`);
       }
-      this.cache.set(cacheKeys.PROJECT_EVENT_FIELDS, projectFields);
+      this.cache.set(cacheKeys.PROJECT_EVENT_FILTERS, projectFields);
     }
   }
 
@@ -91,7 +91,7 @@ export class InsightHubClient implements Client {
     return this.currentUserApi.getOrganizationProjects(orgId, options);
   }
 
-  // This method retrieves all orojects for the organization stored in the cache.
+  // This method retrieves all projects for the organization stored in the cache.
   // If no projects are found in the cache, it fetches them from the API and
   // stores them in the cache for future use.
   // It throws an error if no organizations are found in the cache.
@@ -134,45 +134,48 @@ export class InsightHubClient implements Client {
   }
 
   registerTools(server: McpServer): void {
-    server.tool(
-      "list_insight_hub_projects",
-      "List all projects in an organization",
-      {
-        page_size: z.number().optional().describe("Number of projects to return per page"),
-        page: z.number().optional().describe("Page number to return"),
-      },
-      async (args, _extra) => {
-        try {
-          let projects = await this.getProjects();
-          if (!projects || projects.length === 0) {
+    if (!this.projectApiKey) {
+      server.tool(
+        "list_insight_hub_projects",
+        "List all projects in an organization.",
+        {
+          page_size: z.number().optional().describe("Number of projects to return per page"),
+          page: z.number().optional().describe("Page number to return"),
+        },
+        async (args, _extra) => {
+          try {
+            let projects = await this.getProjects();
+            if (!projects || projects.length === 0) {
+              return {
+                content: [{ type: "text", text: "No projects found." }],
+              };
+            }
+            if (args.page_size || args.page) {
+              const pageSize = args.page_size || 10;
+              const page = args.page || 1;
+              projects = projects.slice((page - 1) * pageSize, page * pageSize);
+            }
             return {
-              content: [{ type: "text", text: "No projects found." }],
+              content: [{ type: "text", text: JSON.stringify(projects) }],
             };
+          } catch (e) {
+            Bugsnag.notify(e as unknown as Error);
+            throw e;
           }
-          if (args.page_size || args.page) {
-            const pageSize = args.page_size || 10;
-            const page = args.page || 1;
-            projects = projects.slice((page - 1) * pageSize, page * pageSize);
-          }
-          return {
-            content: [{ type: "text", text: JSON.stringify(projects) }],
-          };
-        } catch (e) {
-          Bugsnag.notify(e as unknown as Error);
-          throw e;
         }
-      }
-    );
+      );
+    }
+
     server.tool(
       "get_insight_hub_error",
       "Get error details from a project",
       {
-        projectId: z.string().optional().describe("ID of the project"),
         errorId: z.string().describe("ID of the error to fetch"),
+        ...(!this.projectApiKey ? { projectId: z.string().optional().describe("ID of the project") } : {}),
       },
       async (args, _extra) => {
         try {
-          const projectId = args.projectId || this.cache.get<Project>(cacheKeys.CURRENT_PROJECT)?.id;
+          const projectId = typeof args.projectId === 'string' ? args.projectId : this.cache.get<Project>(cacheKeys.CURRENT_PROJECT)?.id;
           if (!projectId || !args.errorId) throw new Error("Both projectId and errorId arguments are required");
           const response = await this.getErrorDetails(projectId, args.errorId);
           return {
@@ -240,18 +243,21 @@ export class InsightHubClient implements Client {
     // Dynamically infer the filters schema from cached project event fields
     server.tool(
       "list_insight_hub_project_errors",
-      "List errors in a project on Insight Hub based on a set of filters",
+      "List errors in the current project based on a set of event filters. Use this tool to find or list errors based on user-provided search filters. You can use the `get_project_event_filters` tool to find valid filters for the current project.",
       {
-        projectId: z.string().optional().describe("ID of the project"),
-        filters: FilterObjectSchema.optional().describe("Filters to apply to the error list"),
+        filters: FilterObjectSchema.optional().describe("Filters to apply to the error list. Valid filters for a project can be found in the `get_project_event_filters` tool."),
+        // Conditionally add projectId only when no project API key is configured
+        ...(this.projectApiKey ? {} : {
+          projectId: z.string().describe("ID of the project"),
+        }),
       },
       async (args, _extra) => {
         try {
-          const projectId = args.projectId || this.cache.get<Project>(cacheKeys.CURRENT_PROJECT)?.id;
+          const projectId = typeof args.projectId === 'string' ? args.projectId : this.cache.get<Project>(cacheKeys.CURRENT_PROJECT)?.id;
           if (!projectId) throw new Error("projectId argument is required");
-          
+
           // Optionally, validate filter keys against cached event fields
-          const eventFields = this.cache.get<EventField[]>(cacheKeys.PROJECT_EVENT_FIELDS) || [];
+          const eventFields = this.cache.get<EventField[]>(cacheKeys.PROJECT_EVENT_FILTERS) || [];
           if (args.filters) {
             const validKeys = new Set(eventFields.map(f => f.display_id));
             for (const key of Object.keys(args.filters)) {
@@ -263,6 +269,24 @@ export class InsightHubClient implements Client {
           const response = await this.listProjectErrors(projectId, args.filters);
           return {
             content: [{ type: "text", text: JSON.stringify(response) }],
+          };
+        } catch (e) {
+          Bugsnag.notify(e as unknown as Error);
+          throw e;
+        }
+      }
+    )
+
+    server.tool(
+      "get_project_event_filters",
+      "Get the available event filters for the current project. Use this tool to find valid filters for the `list_insight_hub_project_errors` tool.",
+      {},
+      async (_args, _extra) => {
+        try {
+          const eventFields = this.cache.get<EventField[]>(cacheKeys.PROJECT_EVENT_FILTERS);
+          if (!eventFields) throw new Error("No event filters found in cache.");
+          return {
+            content: [{ type: "text", text: JSON.stringify(eventFields) }],
           };
         } catch (e) {
           Bugsnag.notify(e as unknown as Error);
