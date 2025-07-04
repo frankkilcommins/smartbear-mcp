@@ -11,9 +11,24 @@ export interface Event {
   id: string;
 }
 
+export interface ErrorApiView {
+  id: string;
+  project_id: string;
+  error_class: string;
+  message: string;
+  context: string;
+  events: number;
+  users: number;
+  first_seen: string;
+  last_seen: string;
+  status: string;
+  // Add other properties as needed based on the API spec
+}
+
 export type ViewErrorOnProjectResponse = Error;
 export type ViewLatestEventOnErrorResponse = Event;
 export type ViewEventByIdResponse = Event;
+export type ListProjectErrorsResponse = ErrorApiView[];
 
 export interface ViewErrorOnProjectOptions {
   [key: string]: any;
@@ -24,6 +39,15 @@ export interface ViewLatestEventOnErrorOptions {
 }
 
 export interface ViewEventByIdOptions {
+  [key: string]: any;
+}
+
+export interface ListProjectErrorsOptions {
+  base?: string; // date-time format
+  sort?: 'last_seen' | 'first_seen' | 'users' | 'events' | 'unsorted';
+  direction?: 'asc' | 'desc';
+  per_page?: number;
+  filters?: any; // Filters object as defined in the API spec
   [key: string]: any;
 }
 
@@ -86,5 +110,30 @@ export class ErrorAPI extends BaseAPI {
       method: 'GET',
       url,
     })) as ViewEventByIdResponse;
+  }
+
+  /**
+   * List the Errors on a Project
+   * GET /projects/{project_id}/errors
+   */
+  async listProjectErrors(projectId: string, options: ListProjectErrorsOptions = {}): Promise<ListProjectErrorsResponse> {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(options)) {
+      if (value !== undefined) {
+        if (key === 'filters' && typeof value === 'object') {
+          // Handle filters as JSON string if it's an object
+          params.append(key, JSON.stringify(value));
+        } else {
+          params.append(key, String(value));
+        }
+      }
+    }
+    const url = params.toString()
+      ? `/projects/${projectId}/errors?${params}`
+      : `/projects/${projectId}/errors`;
+    return (await this.request<ListProjectErrorsResponse>({
+      method: 'GET',
+      url,
+    })) as ListProjectErrorsResponse;
   }
 }
