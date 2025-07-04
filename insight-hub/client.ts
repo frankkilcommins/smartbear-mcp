@@ -6,11 +6,13 @@ import { z } from "zod";
 import Bugsnag from "../common/bugsnag.js";
 import NodeCache from "node-cache";
 import { Organization, Project } from "./client/api/CurrentUser.js";
+import { ProjectAPI } from "./client/api/Project.js";
 
 const cacheKeys = {
   ORG: "insight_hub_org",
   PROJECTS: "insight_hub_projects",
   CURRENT_PROJECT: "insight_hub_current_project",
+  PROJECT_EVENT_FIELDS: "insight_hub_project_event_fields",
 }
 
 // Type definitions for tool arguments
@@ -30,6 +32,7 @@ export class InsightHubClient implements Client {
   private currentUserApi: CurrentUserAPI;
   private errorsApi: ErrorAPI;
   private cache: NodeCache;
+  private projectApi: ProjectAPI;
   private projectApiKey?: string;
 
   constructor(token: string, projectApiKey?: string) {
@@ -44,6 +47,7 @@ export class InsightHubClient implements Client {
     this.currentUserApi = new CurrentUserAPI(config);
     this.errorsApi = new ErrorAPI(config);
     this.cache = new NodeCache();
+    this.projectApi = new ProjectAPI(config);
     this.projectApiKey = projectApiKey;
   }
 
@@ -62,7 +66,16 @@ export class InsightHubClient implements Client {
         throw new Error(`Project with API key ${this.projectApiKey} not found in organization ${orgs[0].name}.`);
       }
       this.cache.set(cacheKeys.CURRENT_PROJECT, project);
+      const projectFields = await this.listProjectEventFields(project.id);
+      if (!projectFields || projectFields.length === 0) {
+        throw new Error(`No event fields found for project ${project.name}.`);
+      }
+      this.cache.set(cacheKeys.PROJECT_EVENT_FIELDS, projectFields);
     }
+  }
+
+  async listProjectEventFields(projectId: string) {
+    return this.projectApi.listProjectEventFields(projectId);
   }
 
   async listOrgs(): Promise<any> {
