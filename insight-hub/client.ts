@@ -10,6 +10,7 @@ import { Organization, Project } from "./client/api/CurrentUser.js";
 const cacheKeys = {
   ORG: "insight_hub_org",
   PROJECTS: "insight_hub_projects",
+  CURRENT_PROJECT: "insight_hub_current_project",
 }
 
 // Type definitions for tool arguments
@@ -29,8 +30,9 @@ export class InsightHubClient implements Client {
   private currentUserApi: CurrentUserAPI;
   private errorsApi: ErrorAPI;
   private cache: NodeCache;
+  private projectApiKey?: string;
 
-  constructor(token: string) {
+  constructor(token: string, projectApiKey?: string) {
     const config = new Configuration({
       authToken: token,
       headers: {
@@ -42,6 +44,7 @@ export class InsightHubClient implements Client {
     this.currentUserApi = new CurrentUserAPI(config);
     this.errorsApi = new ErrorAPI(config);
     this.cache = new NodeCache();
+    this.projectApiKey = projectApiKey;
   }
 
   async initialize(): Promise<void> {
@@ -53,13 +56,20 @@ export class InsightHubClient implements Client {
     this.cache.set(cacheKeys.ORG, orgs[0]);
     const projects = await this.listProjects(orgs[0].id);
     this.cache.set(cacheKeys.PROJECTS, projects);
+    if (this.projectApiKey) {
+      const project = projects.find((project) => project.api_key === this.projectApiKey)
+      if (!project) {
+        throw new Error(`Project with API key ${this.projectApiKey} not found in organization ${orgs[0].name}.`);
+      }
+      this.cache.set(cacheKeys.CURRENT_PROJECT, project);
+    }
   }
 
   async listOrgs(): Promise<any> {
     return this.currentUserApi.listUserOrganizations();
   }
 
-  async listProjects(orgId: string, options?: any): Promise<any> {
+  async listProjects(orgId: string, options?: any): Promise<Project[]> {
     options = {
       ...options,
       paginate: true
@@ -139,13 +149,14 @@ export class InsightHubClient implements Client {
       "get_insight_hub_error",
       "Get error details from a project",
       {
-        projectId: z.string().describe("ID of the project"),
+        projectId: z.string().optional().describe("ID of the project"),
         errorId: z.string().describe("ID of the error to fetch"),
       },
       async (args, _extra) => {
         try {
-          if (!args.projectId || !args.errorId) throw new Error("Both projectId and errorId arguments are required");
-          const response = await this.getErrorDetails(args.projectId, args.errorId);
+          const projectId = args.projectId || this.cache.get<Project>(cacheKeys.CURRENT_PROJECT)?.id;
+          if (!projectId || !args.errorId) throw new Error("Both projectId and errorId arguments are required");
+          const response = await this.getErrorDetails(projectId, args.errorId);
           return {
             content: [{ type: "text", text: JSON.stringify(response) }],
           };

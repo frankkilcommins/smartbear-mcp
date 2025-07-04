@@ -31,6 +31,7 @@ async function main() {
 
   const reflectToken = process.env.REFLECT_API_TOKEN;
   const insightHubToken = process.env.INSIGHT_HUB_AUTH_TOKEN;
+  const insightHubProjectApiKey = process.env.INSIGHT_HUB_PROJECT_API_KEY;
   const apiHubToken = process.env.API_HUB_API_KEY;
 
   if (!reflectToken && !insightHubToken && !apiHubToken) {
@@ -47,7 +48,7 @@ async function main() {
   }
 
   if (insightHubToken) {
-    const insightHubClient = new InsightHubClient(insightHubToken);
+    const insightHubClient = new InsightHubClient(insightHubToken, insightHubProjectApiKey);
     await insightHubClient.initialize();
     insightHubClient.registerTools(server);
     insightHubClient.registerResources(server);
