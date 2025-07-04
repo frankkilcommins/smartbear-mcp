@@ -223,25 +223,6 @@ export class InsightHubClient implements Client {
 
   registerResources(server: McpServer): void {
     server.resource(
-      "insight_hub_orgs",
-      "insighthub://orgs",
-      { description: "List all organizations in Insight Hub", mimeType: "application/json" },
-      async (uri) => {
-        try {
-          return {
-            contents: [{
-              uri: uri.href,
-              text: JSON.stringify(await this.listOrgs())
-            }]
-          }
-        } catch (e) {
-          Bugsnag.notify(e as unknown as Error);
-          throw e;
-        }
-      }
-    );
-
-    server.resource(
       "insight_hub_event",
       new ResourceTemplate("insighthub://event/{id}", { list: undefined }),
       async (uri, { id }) => {
