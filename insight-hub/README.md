@@ -26,9 +26,9 @@ To connect an MCP server, you will need to create a personal auth token from the
    - Get the latest event for an error.
 4. `get_insight_hub_event_details`
    - Get details of a specific event.
-6. `get_project_event_filters`
+5. `get_project_event_filters`
    - List the filters available for a project.
-5. `list_insight_hub_project_errors`
+6. `list_insight_hub_project_errors`
    - List and filter the errors from a project.
 
 ## Resources
