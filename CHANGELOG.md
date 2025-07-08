@@ -1,5 +1,12 @@
 # Changelog
 
+## TBD
+
+- [Insight Hub] Add project API key configuration and initial caching
+  [#27](https://github.com/SmartBear/smartbear-mcp/pull/27)
+- [Insight Hub] Add error filtering by both standard fields and custom filters
+  [#27](https://github.com/SmartBear/smartbear-mcp/pull/27)
+
 ## [0.1.1] - 2025-07-01
 - Updated README to reflect the correct package name and usage instructions.
 - Added more fields to package.json for better npm integration.

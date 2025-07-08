@@ -1,5 +1,6 @@
 import { BaseAPI } from './base.js';
 import { Configuration } from '../configuration.js';
+import { FilterObject, toQueryString } from './filters.js';
 
 // --- Response Types ---
 
@@ -11,9 +12,24 @@ export interface Event {
   id: string;
 }
 
+export interface ErrorApiView {
+  id: string;
+  project_id: string;
+  error_class: string;
+  message: string;
+  context: string;
+  events: number;
+  users: number;
+  first_seen: string;
+  last_seen: string;
+  status: string;
+  // Add other properties as needed based on the API spec
+}
+
 export type ViewErrorOnProjectResponse = Error;
 export type ViewLatestEventOnErrorResponse = Event;
 export type ViewEventByIdResponse = Event;
+export type ListProjectErrorsResponse = ErrorApiView[];
 
 export interface ViewErrorOnProjectOptions {
   [key: string]: any;
@@ -24,6 +40,15 @@ export interface ViewLatestEventOnErrorOptions {
 }
 
 export interface ViewEventByIdOptions {
+  [key: string]: any;
+}
+
+export interface ListProjectErrorsOptions {
+  base?: string; // date-time format
+  sort?: 'last_seen' | 'first_seen' | 'users' | 'events' | 'unsorted';
+  direction?: 'asc' | 'desc';
+  per_page?: number;
+  filters?: FilterObject; // Filters object as defined in the API spec
   [key: string]: any;
 }
 
@@ -86,5 +111,19 @@ export class ErrorAPI extends BaseAPI {
       method: 'GET',
       url,
     })) as ViewEventByIdResponse;
+  }
+
+  /**
+   * List the Errors on a Project
+   * GET /projects/{project_id}/errors
+   */
+  async listProjectErrors(projectId: string, options: ListProjectErrorsOptions = {}): Promise<ListProjectErrorsResponse> {
+    const url = options.filters
+      ? `/projects/${projectId}/errors?${toQueryString(options.filters)}`
+      : `/projects/${projectId}/errors`; 
+    return (await this.request<ListProjectErrorsResponse>({
+      method: 'GET',
+      url,
+    })) as ListProjectErrorsResponse;
   }
 }
