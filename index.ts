@@ -47,7 +47,12 @@ async function main() {
   }
 
   if (insightHubToken) {
-    const insightHubClient = new InsightHubClient(insightHubToken);
+    const insightHubClient = new InsightHubClient(
+      insightHubToken,
+      process.env.INSIGHT_HUB_PROJECT_API_KEY,
+      process.env.INSIGHT_HUB_ENDPOINT
+    );
+    await insightHubClient.initialize();
     insightHubClient.registerTools(server);
     insightHubClient.registerResources(server);
   }

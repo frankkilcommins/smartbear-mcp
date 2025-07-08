@@ -14,6 +14,7 @@ export interface Project {
   id: string;
   name: string;
   slug: string;
+  api_key: string;
 }
 
 export type GetOrganizationProjectsResponse = Project[];
@@ -22,7 +23,7 @@ export type GetOrganizationProjectsResponse = Project[];
 
 export class CurrentUserAPI extends BaseAPI {
   static organizationFields: (keyof Organization)[] = ['id', 'name'];
-  static projectFields: (keyof Project)[] = ['id', 'name', 'slug'];
+  static projectFields: (keyof Project)[] = ['id', 'name', 'slug', 'api_key'];
 
   constructor(configuration: Configuration) {
     super(configuration);
