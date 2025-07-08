@@ -1,6 +1,6 @@
 # Changelog
 
-## TBD
+## [0.2.0] - 2025-07-08
 
 - [Insight Hub] Add project API key configuration and initial caching
   [#27](https://github.com/SmartBear/smartbear-mcp/pull/27)
