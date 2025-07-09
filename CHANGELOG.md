@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased] - 2025-07-09
+- [Insight Hub] Add API headers to support On-premise installations
+  [#30](https://github.com/SmartBear/smartbear-mcp/pull/30)
+
 ## [0.2.0] - 2025-07-08
 
 - [Insight Hub] Add project API key configuration and initial caching
