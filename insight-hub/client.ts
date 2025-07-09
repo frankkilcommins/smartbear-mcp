@@ -52,6 +52,8 @@ export class InsightHubClient implements Client {
       headers: {
         "User-Agent": `${MCP_SERVER_NAME}/${MCP_SERVER_VERSION}`,
         "Content-Type": "application/json",
+        "X-Bugsnag-API": "true",
+        "X-Version": "2",
       },
       basePath: endpoint,
     });
