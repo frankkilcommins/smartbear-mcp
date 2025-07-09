@@ -1,6 +1,10 @@
 # Changelog
 
-## [Unreleased] - 2025-07-09
+## [0.2.1] - 2025-07-09
+- Bumped `@modelcontextprotocol/sdk` to latest (v1.15.0)
+  [#29](https://github.com/SmartBear/smartbear-mcp/pull/29)
+- [Insight Hub] Improved tool descriptions
+  [#29](https://github.com/SmartBear/smartbear-mcp/pull/29)
 - [Insight Hub] Add API headers to support On-premise installations
   [#30](https://github.com/SmartBear/smartbear-mcp/pull/30)
 
