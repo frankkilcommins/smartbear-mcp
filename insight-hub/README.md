@@ -2,17 +2,20 @@
 
 Fetch details of your app crashes and errors from your [Insight Hub](https://www.smartbear.com/insight-hub) dashboard for your LLM to help you diagnose and fix.
 
-To connect an MCP server, you will need to create a personal auth token from the user settings page on your Insight Hub dashboard. If you wish to interact with only one Insight Hub project, we also recommend setting `INSIGHT_HUB_PROJECT_API_KEY` to reduce the scope of the conversation.
+To connect an MCP server, you will need to create a personal auth token from the user settings page on your Insight Hub dashboard.
+
+If you wish to interact with only one Insight Hub project, we also recommend setting `INSIGHT_HUB_PROJECT_API_KEY` to reduce the scope of the conversation. This allows the MCP server to pre-cache your project's custom filters for better filtering prompts.
 
 ## Example prompts
 
-- "Help me fix this crash from Insight Hub: https://app.bugsnag.com/my-org/my-project/errors/1a2b3c4d5e6f7g8h9i0j1k2l?&event_id=1a2b3c4d5e6f7g8h9i0j1k2l"
-- "What are my top events for the 'example' project in insight hub?"
+- "Help me fix this crash: https://app.bugsnag.com/my-org/my-project/errors/1a2b3c4d5e6f7g8h9i0j1k2l?&event_id=1a2b3c4d5e6f7g8h9i0j1k2l"
+- "What are my latest events my project?"
+- "Which errors occurred in the last 7 days?"
 
 ## Environment Variables
 
 - `INSIGHT_HUB_AUTH_TOKEN`: (Required) The auth token for your account from your Insight Hub dashboard, under **Personal auth tokens** in user settings.
-- `INSIGHT_HUB_PROJECT_API_KEY`: (Optional) The API key for the Insight Hub project you wish to interact with. Use this to scope all operations to a single project.
+- `INSIGHT_HUB_PROJECT_API_KEY`: (Recommended) The API key for the Insight Hub project you wish to interact with. Use this to scope all operations to a single project.
 - `INSIGHT_HUB_ENDPOINT`: (Optional) The API server to connect to. Use this for on-premise installations to point to your own endpoint (e.g. `https://your.api.server`).
 
 ## Tools

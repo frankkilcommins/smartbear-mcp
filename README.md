@@ -32,6 +32,7 @@ If setting up manually, add the following configuration to `.vscode/mcp.json`:
       ],
       "env": {
         "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
+        "INSIGHT_HUB_PROJECT_API_KEY": "${input:insight_hub_project_api_key}",
         "REFLECT_API_TOKEN": "${input:reflect_api_token}",
         "API_HUB_API_KEY": "${input:api_hub_api_key}"
       }
@@ -41,19 +42,25 @@ If setting up manually, add the following configuration to `.vscode/mcp.json`:
       {
          "id": "insight_hub_auth_token",
          "type": "promptString",
-         "description": "Insight Hub Auth Token",
+         "description": "Insight Hub Auth Token - leave blank to disable Insight Hub tools",
          "password": true
+      },
+      {
+         "id": "insight_hub_project_api_key",
+         "type": "promptString",
+         "description": "Insight Hub Project API Key - for single project interactions",
+         "password": false
       },
       {
          "id": "reflect_api_token",
          "type": "promptString",
-         "description": "Reflect API Token",
+         "description": "Reflect API Token - leave blank to disable Reflect tools",
          "password": true
       },
       {
          "id": "api_hub_api_key",
          "type": "promptString",
-         "description": "API Hub API Key",
+         "description": "API Hub API Key - leave blank to disable API Hub tools",
          "password": true
       }
   ]
@@ -113,9 +120,7 @@ Update your `.vscode/mcp.json` to point to your local build:
       "command": "node",
       "args": ["<PATH_TO_SMARTBEAR_MCP>/dist/index.js"],
       "env": {
-        "INSIGHT_HUB_AUTH_TOKEN": "${input:insight_hub_auth_token}",
-        "REFLECT_API_TOKEN": "${input:reflect_api_token}",
-        "API_HUB_API_KEY": "${input:api_hub_api_key}"
+        // ...same as above...
       }
     }
   },
