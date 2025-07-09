@@ -230,8 +230,8 @@ export class InsightHubClient implements Client {
       "get_insight_hub_error",
       {
         description: toolDescriptionTemplate({
-          summary: "Get detailed information about a specific error from an Insight Hub project",
-          purpose: "Retrieve comprehensive error details including metadata, events, and context for debugging",
+          summary: "Get detailed information about a specific error from a project",
+          purpose: "Retrieve error details including metadata, events, and context for debugging",
           useCases: [
             "Investigate a specific error found through list_insight_hub_project_errors",
             "Get error details for debugging and root cause analysis",
@@ -267,7 +267,7 @@ export class InsightHubClient implements Client {
           ],
           hints: [
             "Error IDs can be found using the list_insight_hub_project_errors tool",
-            "Use this after filtering errors to get detailed information about specific issues"
+            "Use this after filtering errors to get detailed information about specific errors"
           ]
         }),
         inputSchema: {
@@ -293,8 +293,8 @@ export class InsightHubClient implements Client {
       "get_insight_hub_error_latest_event",
       {
         description: toolDescriptionTemplate({
-          summary: "Get the most recent event occurrence for a specific error",
-          purpose: "Retrieve the latest event details for an error to understand recent occurrences and context",
+          summary: "Get the most recent event of a specific error",
+          purpose: "Retrieve the latest event (occurrence) of an error to understand when it last happened and its details",
           useCases: [
             "Get the most recent occurrence of an error for immediate debugging",
             "Understand the latest context and stack trace for an ongoing issue",
@@ -321,7 +321,7 @@ export class InsightHubClient implements Client {
             )
           ],
           hints: [
-            "This shows the most recent occurrence - use get_insight_hub_error for overall error statistics",
+            "This shows the most recent occurrence - use get_insight_hub_error for aggregated details of all events grouped into the error",
             "The event includes detailed context like user information, request data, and environment details"
           ]
         }),
@@ -346,10 +346,10 @@ export class InsightHubClient implements Client {
       "get_insight_hub_event_details",
       {
         description: toolDescriptionTemplate({
-          summary: "Get detailed information about a specific event using its Insight Hub URL",
+          summary: "Get detailed information about a specific event using its Insight Hub dashboard URL",
           purpose: "Retrieve event details directly from an Insight Hub web interface URL for quick debugging",
           useCases: [
-            "Get event details when given an Insight Hub URL from a user or notification",
+            "Get event details when given an Insight Hub dashboard URL from a user or notification",
             "Extract event information from shared links or browser URLs",
             "Quick lookup of event details without needing separate project and event IDs"
           ],
@@ -358,13 +358,13 @@ export class InsightHubClient implements Client {
               "link",
               "string",
               true,
-              "Full URL to the event details page in Insight Hub web interface",
+              "Full URL to the event details page in the Insight Hub dashboard (web interface)",
               {
                 examples: [
-                  "https://app.bugsnag.com/bugsnag-test-projects/jason-fps-test/errors/6863e2af8c857c0a5023b411?event_id=6863e2af012caf1d5c320000"
+                  "https://app.bugsnag.com/my-org/my-project/errors/6863e2af8c857c0a5023b411?event_id=6863e2af012caf1d5c320000"
                 ],
                 constraints: [
-                  "Must be a valid Insight Hub URL containing project slug and event_id parameter"
+                  "Must be a valid Insight Hub dashboard URL containing project slug and event_id parameter"
                 ]
               }
             )
@@ -373,14 +373,14 @@ export class InsightHubClient implements Client {
             createExample(
               "Get event details from Insight Hub URL",
               {
-                link: "https://app.bugsnag.com/bugsnag-test-projects/jason-fps-test/errors/6863e2af8c857c0a5023b411?event_id=6863e2af012caf1d5c320000"
+                link: "https://app.bugsnag.com/my-org/my-project/errors/6863e2af8c857c0a5023b411?event_id=6863e2af012caf1d5c320000"
               },
               "JSON object with complete event details including stack trace, metadata, and context"
             )
           ],
           hints: [
             "The URL must contain both project slug in the path and event_id in query parameters",
-            "This is useful when users share Insight Hub URLs and you need to extract the event data"
+            "This is useful when users share Insight Hub dashboard URLs and you need to extract the event data"
           ]
         }),
         inputSchema: {
@@ -420,7 +420,7 @@ export class InsightHubClient implements Client {
       "list_insight_hub_project_errors",
       {
         description: toolDescriptionTemplate({
-          summary: "List and search errors in an Insight Hub project using customizable filters",
+          summary: "List and search errors in a project using customizable filters",
           purpose: "Retrieve filtered list of errors from a project for analysis, debugging, and reporting",
           useCases: [
             "Debug recent application errors by filtering for open errors in the last 7 days",
