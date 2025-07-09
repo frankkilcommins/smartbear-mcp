@@ -35,7 +35,7 @@
   },
   "dependencies": {
     "@bugsnag/js": "^8.2.0",
-    "@modelcontextprotocol/sdk": "1.12.1",
+    "@modelcontextprotocol/sdk": "^1.15.0",
     "node-cache": "^5.1.2"
   },
   "devDependencies": {
