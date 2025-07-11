@@ -1,4 +1,5 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "../common/info.js";
 import { Client } from "../common/types.js";
 import { z } from "zod";
 
@@ -23,12 +24,13 @@ export interface testExecutionArgs {
 
 // ReflectClient class implementing the Client interface
 export class ReflectClient implements Client {
-  private headers: { "X-API-KEY": string; "Content-Type": string };
+  private headers: { "X-API-KEY": string; "Content-Type": string, "User-Agent": string };
 
   constructor(token: string) {
     this.headers = {
       "X-API-KEY": `${token}`,
       "Content-Type": "application/json",
+      "User-Agent": `${MCP_SERVER_NAME}/${MCP_SERVER_VERSION}`,
     };
   }
 
