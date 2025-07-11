@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { MCP_SERVER_NAME, MCP_SERVER_VERSION } from "../common/info.js";
 import { Client } from "../common/types.js";
 
 // Type definitions for tool arguments
@@ -54,12 +55,13 @@ export interface updateProductArgs extends productArgs {
 
 // Tool definitions for API Hub API client
 export class ApiHubClient implements Client {
-  private headers: { "Authorization": string; "Content-Type": string };
+  private headers: { "Authorization": string; "Content-Type": string, "User-Agent": string };
 
   constructor(token: string) {
     this.headers = {
       "Authorization": `Bearer ${token}`,
       "Content-Type": "application/json",
+      "User-Agent": `${MCP_SERVER_NAME}/${MCP_SERVER_VERSION}`,
     };
   }
 
@@ -172,9 +174,9 @@ export class ApiHubClient implements Client {
     server.tool(
       "create_portal",
       "Create a new portal within API Hub.",
-      { 
-        name: z.string().optional().describe("The portal name."), 
-        subdomain: z.string().describe("The portal subdomain."), 
+      {
+        name: z.string().optional().describe("The portal name."),
+        subdomain: z.string().describe("The portal subdomain."),
         offline: z.boolean().optional().describe("If set to true the portal will not be visible to customers."),
         routing: z.string().optional().describe("Determines the routing strategy ('browser' or 'proxy')."),
         credentialsEnabled: z.string().optional().describe("Indicates if credentials are enabled for the portal."),
