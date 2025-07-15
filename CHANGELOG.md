@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.2.2] - 2025-07-11
+- [API Hub] Add user agent header to API requests
+  [#34](https://github.com/SmartBear/smartbear-mcp/pull/34)
+- [Reflect] Add user agent header to API requests
+  [#34](https://github.com/SmartBear/smartbear-mcp/pull/34)
+
 ## [0.2.1] - 2025-07-09
 - Bumped `@modelcontextprotocol/sdk` to latest (v1.15.0)
   [#29](https://github.com/SmartBear/smartbear-mcp/pull/29)
