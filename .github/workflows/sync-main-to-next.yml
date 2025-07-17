@@ -122,7 +122,7 @@ jobs:
                   owner,
                   repo,
                   pull_number: pr.data.number,
-                  team_reviewers: [] // Add team reviewers if needed
+                  team_reviewers: ["bugsnag-dev"]
                 });
 
                 // Enable auto-merge (requires GraphQL)
