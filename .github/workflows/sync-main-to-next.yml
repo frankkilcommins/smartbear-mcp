@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   issues: write
+  pull-requests: write
 
 jobs:
   sync-branches:
@@ -25,88 +26,203 @@ jobs:
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Sync main to next
-        run: |
-          # Switch to next branch
-          git checkout next
+      - name: Create sync branch and PR
+        id: create-sync-pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { owner, repo } = context.repo;
+            const syncBranchName = `sync-main-to-next-${Date.now()}`;
 
-          # Get the current commit hash for logging
-          NEXT_BEFORE=$(git rev-parse HEAD)
-          echo "Next branch before sync: $NEXT_BEFORE"
+            try {
+              // Get the latest commit from main branch
+              const mainBranch = await github.rest.repos.getBranch({
+                owner,
+                repo,
+                branch: 'main'
+              });
 
-          # Attempt to merge main into next
-          if git merge origin/main --no-edit; then
-            echo "✅ Successfully merged main into next"
+              // Get the next branch reference
+              const nextBranch = await github.rest.repos.getBranch({
+                owner,
+                repo,
+                branch: 'next'
+              });
 
-            # Push the updated next branch
-            git push origin next
-            echo "✅ Successfully pushed updated next branch"
+              console.log(`Main branch SHA: ${mainBranch.data.commit.sha}`);
+              console.log(`Next branch SHA: ${nextBranch.data.commit.sha}`);
 
-            # Log the new commit hash
-            NEXT_AFTER=$(git rev-parse HEAD)
-            echo "Next branch after sync: $NEXT_AFTER"
+              // Check if main and next are already in sync
+              if (mainBranch.data.commit.sha === nextBranch.data.commit.sha) {
+                console.log('✅ Branches are already in sync, no PR needed');
+                core.setOutput('sync_needed', 'false');
+                return;
+              }
 
-            # Set output for summary
-            echo "SYNC_STATUS=success" >> $GITHUB_ENV
-            echo "NEXT_BEFORE=$NEXT_BEFORE" >> $GITHUB_ENV
-            echo "NEXT_AFTER=$NEXT_AFTER" >> $GITHUB_ENV
-          else
-            echo "❌ Merge conflict detected!"
-            echo "Manual intervention required to resolve conflicts between main and next branches."
+              // Create a new branch from next
+              await github.rest.git.createRef({
+                owner,
+                repo,
+                ref: `refs/heads/${syncBranchName}`,
+                sha: nextBranch.data.commit.sha
+              });
 
-            # Abort the merge
-            git merge --abort
+              console.log(`✅ Created sync branch: ${syncBranchName}`);
 
-            # Set output for summary
-            echo "SYNC_STATUS=conflict" >> $GITHUB_ENV
+              // Try to merge main into the sync branch using Git API
+              try {
+                const mergeResult = await github.rest.repos.merge({
+                  owner,
+                  repo,
+                  base: syncBranchName,
+                  head: 'main',
+                  commit_message: [
+                    "Sync main to next branch",
+                    "",
+                    "Automatically syncing changes from main branch to next branch.",
+                    "",
+                    `Source commit: ${mainBranch.data.commit.sha}`
+                  ].join('\n')
+                });
 
-            # Exit with error to make the workflow fail
-            exit 1
-          fi
+                console.log(`✅ Successfully merged main into ${syncBranchName}`);
+                console.log(`Merge commit SHA: ${mergeResult.data.sha}`);
+
+                // Create pull request
+                const pr = await github.rest.pulls.create({
+                  owner,
+                  repo,
+                  title: `🔄 Sync main to next branch`,
+                  head: syncBranchName,
+                  base: 'next',
+                  body: [
+                    "## Automatic Branch Sync",
+                    "",
+                    "This PR automatically syncs changes from `main` to `next` branch.",
+                    "",
+                    "### Details:",
+                    `- **Source branch:** main (${mainBranch.data.commit.sha})`,
+                    `- **Target branch:** next (${nextBranch.data.commit.sha})`,
+                    "- **Trigger:** Push to main branch",
+                    `- **Trigger commit:** ${context.sha}`,
+                    "",
+                    "### Changes:",
+                    "This PR includes all commits from main that are not yet in the next branch.",
+                    "",
+                    "---",
+                    "*This PR was automatically created by the [Sync Main to Next](.github/workflows/sync-main-to-next.yml) workflow.*"
+                  ].join('\n'),
+                  draft: false
+                });
+
+                console.log(`✅ Created PR #${pr.data.number}: ${pr.data.html_url}`);
+
+                // Enable auto-merge on the PR
+                await github.rest.pulls.createReviewRequest({
+                  owner,
+                  repo,
+                  pull_number: pr.data.number,
+                  team_reviewers: [] // Add team reviewers if needed
+                });
+
+                // Enable auto-merge (requires GraphQL)
+                const enableAutoMergeQuery = `
+                  mutation EnableAutoMerge($pullRequestId: ID!) {
+                    enablePullRequestAutoMerge(input: {
+                      pullRequestId: $pullRequestId,
+                      mergeMethod: MERGE
+                    }) {
+                      pullRequest {
+                        autoMergeRequest {
+                          enabledAt
+                        }
+                      }
+                    }
+                  }
+                `;
+
+                try {
+                  await github.graphql(enableAutoMergeQuery, {
+                    pullRequestId: pr.data.node_id
+                  });
+                  console.log('✅ Enabled auto-merge for the PR');
+                } catch (autoMergeError) {
+                  console.log('⚠️ Could not enable auto-merge:', autoMergeError.message);
+                  console.log('Auto-merge may need to be enabled manually or repository settings may not allow it');
+                }
+
+                core.setOutput('pr_number', pr.data.number);
+                core.setOutput('pr_url', pr.data.html_url);
+                core.setOutput('sync_needed', 'true');
+                core.setOutput('sync_status', 'success');
+
+              } catch (mergeError) {
+                console.log('❌ Merge conflict detected!');
+                console.log('Error:', mergeError.message);
+
+                // Delete the sync branch since merge failed
+                await github.rest.git.deleteRef({
+                  owner,
+                  repo,
+                  ref: `heads/${syncBranchName}`
+                });
+
+                core.setOutput('sync_needed', 'true');
+                core.setOutput('sync_status', 'conflict');
+                throw mergeError;
+              }
+
+            } catch (error) {
+              console.error('Error in sync process:', error);
+              core.setFailed(error.message);
+              throw error;
+            }
 
       - name: Create summary
         if: always()
         run: |
-          if [ "$SYNC_STATUS" = "success" ]; then
-            echo "## Branch Sync Complete ✅" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ steps.create-sync-pr.outputs.sync_needed }}" = "false" ]; then
+            echo "## Branches Already in Sync ✅" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Successfully synced changes from \`main\` to \`next\` branch." >> $GITHUB_STEP_SUMMARY
+            echo "No sync needed - \`main\` and \`next\` branches are already in sync." >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.create-sync-pr.outputs.sync_status }}" = "success" ]; then
+            echo "## Sync PR Created ✅" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "Successfully created a pull request to sync changes from \`main\` to \`next\` branch." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Details:" >> $GITHUB_STEP_SUMMARY
+            echo "- **Pull Request:** [#${{ steps.create-sync-pr.outputs.pr_number }}](${{ steps.create-sync-pr.outputs.pr_url }})" >> $GITHUB_STEP_SUMMARY
             echo "- **Source branch:** main" >> $GITHUB_STEP_SUMMARY
             echo "- **Target branch:** next" >> $GITHUB_STEP_SUMMARY
-            echo "- **Trigger:** Push to main branch" >> $GITHUB_STEP_SUMMARY
+            echo "- **Auto-merge:** Enabled (will merge after review approval)" >> $GITHUB_STEP_SUMMARY
             echo "- **Trigger commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-            echo "- **Next branch before:** \`${NEXT_BEFORE}\`" >> $GITHUB_STEP_SUMMARY
-            echo "- **Next branch after:** \`${NEXT_AFTER}\`" >> $GITHUB_STEP_SUMMARY
-          elif [ "$SYNC_STATUS" = "conflict" ]; then
-            echo "## Branch Sync Failed ❌" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ steps.create-sync-pr.outputs.sync_status }}" = "conflict" ]; then
+            echo "## Sync Failed - Conflicts Detected ❌" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "**Merge conflict detected!** Manual intervention required." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### What happened:" >> $GITHUB_STEP_SUMMARY
             echo "- Attempted to merge \`main\` into \`next\` branch" >> $GITHUB_STEP_SUMMARY
             echo "- Conflicts were detected that require manual resolution" >> $GITHUB_STEP_SUMMARY
-            echo "- The merge was aborted to prevent data loss" >> $GITHUB_STEP_SUMMARY
+            echo "- No PR was created due to conflicts" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Next steps:" >> $GITHUB_STEP_SUMMARY
-            echo "1. Manually checkout the \`next\` branch locally" >> $GITHUB_STEP_SUMMARY
-            echo "2. Run \`git merge main\` to see the conflicts" >> $GITHUB_STEP_SUMMARY
-            echo "3. Resolve the conflicts manually" >> $GITHUB_STEP_SUMMARY
-            echo "4. Commit and push the resolved merge" >> $GITHUB_STEP_SUMMARY
+            echo "1. Manually create a branch from \`next\`" >> $GITHUB_STEP_SUMMARY
+            echo "2. Merge \`main\` and resolve conflicts" >> $GITHUB_STEP_SUMMARY
+            echo "3. Create a PR to merge the resolved changes into \`next\`" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "### Trigger Details:" >> $GITHUB_STEP_SUMMARY
             echo "- **Source branch:** main" >> $GITHUB_STEP_SUMMARY
             echo "- **Target branch:** next" >> $GITHUB_STEP_SUMMARY
             echo "- **Trigger commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
           else
-            echo "## Branch Sync Status Unknown ⚠️" >> $GITHUB_STEP_SUMMARY
+            echo "## Sync Status Unknown ⚠️" >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             echo "The sync process completed with an unknown status." >> $GITHUB_STEP_SUMMARY
           fi
 
       - name: Create Issue on Conflict
-        if: failure() && env.SYNC_STATUS == 'conflict'
+        if: failure() && steps.create-sync-pr.outputs.sync_status == 'conflict'
         uses: actions/github-script@v7
         with:
           script: |
@@ -114,48 +230,52 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               title: '🚨 Branch Sync Conflict: main → next',
-              body: `## Automatic Branch Sync Failed
-
-              A merge conflict was detected when attempting to sync changes from \`main\` to \`next\` branch.
-
-              **Trigger Commit:** ${context.sha}
-              **Workflow Run:** [${context.runId}](${context.payload.repository.html_url}/actions/runs/${context.runId})
-
-              ### Manual Resolution Required
-
-              Please follow these steps to resolve the conflict:
-
-              1. **Checkout the next branch locally:**
-                 \`\`\`bash
-                 git checkout next
-                 git pull origin next
-                 \`\`\`
-
-              2. **Merge main and resolve conflicts:**
-                 \`\`\`bash
-                 git merge main
-                 # Resolve any conflicts in your editor
-                 git add .
-                 git commit
-                 \`\`\`
-
-              3. **Push the resolved merge:**
-                 \`\`\`bash
-                 git push origin next
-                 \`\`\`
-
-              4. **Close this issue** once the sync is complete.
-
-              ### Files Likely to Have Conflicts
-
-              Check these common conflict areas:
-              - \`package.json\` (version numbers)
-              - \`CHANGELOG.md\` (release notes)
-              - Configuration files
-              - Documentation updates
-
-              ---
-              *This issue was automatically created by the [Sync Main to Next](.github/workflows/sync-main-to-next.yml) workflow.*`,
+              body: [
+                "## Automatic Branch Sync Failed",
+                "",
+                "A merge conflict was detected when attempting to sync changes from `main` to `next` branch.",
+                "",
+                `**Trigger Commit:** ${context.sha}`,
+                `**Workflow Run:** [${context.runId}](${context.payload.repository.html_url}/actions/runs/${context.runId})`,
+                "",
+                "### Manual Resolution Required",
+                "",
+                "Please follow these steps to resolve the conflict:",
+                "",
+                "1. **Create a new branch from next:**",
+                "   ```bash",
+                "   git checkout next",
+                "   git pull origin next",
+                "   git checkout -b sync-main-to-next-manual",
+                "   ```",
+                "",
+                "2. **Merge main and resolve conflicts:**",
+                "   ```bash",
+                "   git merge main",
+                "   # Resolve any conflicts in your editor",
+                "   git add .",
+                "   git commit",
+                "   ```",
+                "",
+                "3. **Create a Pull Request:**",
+                "   ```bash",
+                "   git push origin sync-main-to-next-manual",
+                "   # Then create a PR from sync-main-to-next-manual to next",
+                "   ```",
+                "",
+                "4. **Close this issue** once the sync PR is merged.",
+                "",
+                "### Files Likely to Have Conflicts",
+                "",
+                "Check these common conflict areas:",
+                "- `package.json` (version numbers)",
+                "- `CHANGELOG.md` (release notes)",
+                "- Configuration files",
+                "- Documentation updates",
+                "",
+                "---",
+                "*This issue was automatically created by the [Sync Main to Next](.github/workflows/sync-main-to-next.yml) workflow.*"
+              ].join('\n'),
               labels: ['bug', 'automation', 'merge-conflict']
             });
 
