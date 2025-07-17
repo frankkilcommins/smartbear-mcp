@@ -181,45 +181,47 @@ jobs:
       - name: Create summary
         if: always()
         run: |
-          if [ "${{ steps.create-sync-pr.outputs.sync_needed }}" = "false" ]; then
-            echo "## Branches Already in Sync ✅" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "No sync needed - \`main\` and \`next\` branches are already in sync." >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ steps.create-sync-pr.outputs.sync_status }}" = "success" ]; then
-            echo "## Sync PR Created ✅" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "Successfully created a pull request to sync changes from \`main\` to \`next\` branch." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Details:" >> $GITHUB_STEP_SUMMARY
-            echo "- **Pull Request:** [#${{ steps.create-sync-pr.outputs.pr_number }}](${{ steps.create-sync-pr.outputs.pr_url }})" >> $GITHUB_STEP_SUMMARY
-            echo "- **Source branch:** main" >> $GITHUB_STEP_SUMMARY
-            echo "- **Target branch:** next" >> $GITHUB_STEP_SUMMARY
-            echo "- **Auto-merge:** Enabled (will merge after review approval)" >> $GITHUB_STEP_SUMMARY
-            echo "- **Trigger commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          elif [ "${{ steps.create-sync-pr.outputs.sync_status }}" = "conflict" ]; then
-            echo "## Sync Failed - Conflicts Detected ❌" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "**Merge conflict detected!** Manual intervention required." >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### What happened:" >> $GITHUB_STEP_SUMMARY
-            echo "- Attempted to merge \`main\` into \`next\` branch" >> $GITHUB_STEP_SUMMARY
-            echo "- Conflicts were detected that require manual resolution" >> $GITHUB_STEP_SUMMARY
-            echo "- No PR was created due to conflicts" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Next steps:" >> $GITHUB_STEP_SUMMARY
-            echo "1. Manually create a branch from \`next\`" >> $GITHUB_STEP_SUMMARY
-            echo "2. Merge \`main\` and resolve conflicts" >> $GITHUB_STEP_SUMMARY
-            echo "3. Create a PR to merge the resolved changes into \`next\`" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "### Trigger Details:" >> $GITHUB_STEP_SUMMARY
-            echo "- **Source branch:** main" >> $GITHUB_STEP_SUMMARY
-            echo "- **Target branch:** next" >> $GITHUB_STEP_SUMMARY
-            echo "- **Trigger commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "## Sync Status Unknown ⚠️" >> $GITHUB_STEP_SUMMARY
-            echo "" >> $GITHUB_STEP_SUMMARY
-            echo "The sync process completed with an unknown status." >> $GITHUB_STEP_SUMMARY
-          fi
+          {
+            if [ "${{ steps.create-sync-pr.outputs.sync_needed }}" = "false" ]; then
+              echo "## Branches Already in Sync ✅"
+              echo ""
+              echo "No sync needed - \`main\` and \`next\` branches are already in sync."
+            elif [ "${{ steps.create-sync-pr.outputs.sync_status }}" = "success" ]; then
+              echo "## Sync PR Created ✅"
+              echo ""
+              echo "Successfully created a pull request to sync changes from \`main\` to \`next\` branch."
+              echo ""
+              echo "### Details:"
+              echo "- **Pull Request:** [#${{ steps.create-sync-pr.outputs.pr_number }}](${{ steps.create-sync-pr.outputs.pr_url }})"
+              echo "- **Source branch:** main"
+              echo "- **Target branch:** next"
+              echo "- **Auto-merge:** Enabled (will merge after review approval)"
+              echo "- **Trigger commit:** ${{ github.sha }}"
+            elif [ "${{ steps.create-sync-pr.outputs.sync_status }}" = "conflict" ]; then
+              echo "## Sync Failed - Conflicts Detected ❌"
+              echo ""
+              echo "**Merge conflict detected!** Manual intervention required."
+              echo ""
+              echo "### What happened:"
+              echo "- Attempted to merge \`main\` into \`next\` branch"
+              echo "- Conflicts were detected that require manual resolution"
+              echo "- No PR was created due to conflicts"
+              echo ""
+              echo "### Next steps:"
+              echo "1. Manually create a branch from \`next\`"
+              echo "2. Merge \`main\` and resolve conflicts"
+              echo "3. Create a PR to merge the resolved changes into \`next\`"
+              echo ""
+              echo "### Trigger Details:"
+              echo "- **Source branch:** main"
+              echo "- **Target branch:** next"
+              echo "- **Trigger commit:** ${{ github.sha }}"
+            else
+              echo "## Sync Status Unknown ⚠️"
+              echo ""
+              echo "The sync process completed with an unknown status."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Create Issue on Conflict
         if: failure() && steps.create-sync-pr.outputs.sync_status == 'conflict'
