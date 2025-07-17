@@ -15,7 +15,7 @@ if ! command -v actionlint &> /dev/null; then
 fi
 
 # Lint all workflow files
-if actionlint .github/workflows/*.yml; then
+if actionlint .github/workflows/*.{yml,yaml}; then
     echo "✅ All workflows are valid!"
 else
     echo "❌ Workflow linting failed"
