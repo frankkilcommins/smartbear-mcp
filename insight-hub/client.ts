@@ -233,8 +233,13 @@ export class InsightHubClient implements Client {
               const page = args.page || 1;
               projects = projects.slice((page - 1) * pageSize, page * pageSize);
             }
+
+            const result = {
+              data: projects,
+              count: projects.length,
+            }
             return {
-              content: [{ type: "text", text: JSON.stringify(projects) }],
+              content: [{ type: "text", text: JSON.stringify(result) }],
             };
           } catch (e) {
             Bugsnag.notify(e as unknown as Error);
@@ -483,7 +488,8 @@ export class InsightHubClient implements Client {
                   "user.email": [{ "type": "eq", "value": "user@example.com" }],
                   "event.since": [{ "type": "eq", "value": "24h" }]
                 }
-              }
+              },
+              "JSON object with a list of errors in the 'data' field, and an error count in the 'count' field"
             )
           ],
           hints: [
@@ -517,8 +523,12 @@ export class InsightHubClient implements Client {
             }
           }
           const errors = await this.listProjectErrors(projectId, args.filters);
+          const result = {
+            data: errors,
+            count: errors.length,
+          };
           return {
-            content: [{ type: "text", text: JSON.stringify(errors) }],
+            content: [{ type: "text", text: JSON.stringify(result) }],
           };
         } catch (e) {
           Bugsnag.notify(e as unknown as Error);
