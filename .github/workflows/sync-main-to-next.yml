@@ -117,8 +117,8 @@ jobs:
 
                 console.log(`✅ Created PR #${pr.data.number}: ${pr.data.html_url}`);
 
-                // Enable auto-merge on the PR
-                await github.rest.pulls.createReviewRequest({
+                // Request review from team
+                await github.rest.pulls.requestReviewers({
                   owner,
                   repo,
                   pull_number: pr.data.number,
