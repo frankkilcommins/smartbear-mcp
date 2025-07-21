@@ -96,11 +96,13 @@ export class InsightHubClient implements Client {
   }
 
   async listProjectEventFields(projectId: string) {
-    return this.projectApi.listProjectEventFields(projectId);
+    const response = await this.projectApi.listProjectEventFields(projectId);
+    return response.body || [];
   }
 
   async listOrgs(): Promise<any> {
-    return this.currentUserApi.listUserOrganizations();
+    const response = await this.currentUserApi.listUserOrganizations();
+    return response.body || [];
   }
 
   async listProjects(orgId: string, options?: any): Promise<Project[]> {
@@ -108,7 +110,8 @@ export class InsightHubClient implements Client {
       ...options,
       paginate: true
     };
-    return this.currentUserApi.getOrganizationProjects(orgId, options);
+    const response = await this.currentUserApi.getOrganizationProjects(orgId, options);
+    return response.body || [];
   }
 
   // This method retrieves all projects for the organization stored in the cache.
@@ -131,26 +134,39 @@ export class InsightHubClient implements Client {
     return projects;
   }
 
-  async getErrorDetails(projectId: string, errorId: string): Promise<any> {
-    return this.errorsApi.viewErrorOnProject(projectId, errorId);
+  async getErrorDetails(projectId: string, errorId: string) {
+    const response = await this.errorsApi.viewErrorOnProject(projectId, errorId);
+    return response.body;
   }
 
-  async getLatestErrorEvent(errorId: string): Promise<any> {
-    return this.errorsApi.viewLatestEventOnError(errorId);
+  async getLatestErrorEvent(errorId: string) {
+    const response = await this.errorsApi.viewLatestEventOnError(errorId);
+    return response.body;
   }
 
-  async getProjectEvent(projectId: string, eventId: string): Promise<any> {
-    return this.errorsApi.viewEventById(projectId, eventId);
+  async getProjectEvent(projectId: string, eventId: string) {
+    const response = await this.errorsApi.viewEventById(projectId, eventId);
+    return response.body;
   }
 
-  async findEventById(eventId: string): Promise<any> {
+  async findEventById(eventId: string) {
     const projects = await this.listOrgs().then(([org]) => this.listProjects(org.id));
     const eventDetails = await Promise.all(projects.map((p: any) => this.getProjectEvent(p.id, eventId).catch(_e => null)));
     return eventDetails.find(event => !!event);
   }
 
-  async listProjectErrors(projectId: string, filters?: FilterObject): Promise<any> {
-    return this.errorsApi.listProjectErrors(projectId, { filters });
+  async listProjectErrors(projectId: string, filters?: FilterObject) {
+    const response = await this.errorsApi.listProjectErrors(projectId, { filters });
+    return response.body || [];
+  }
+
+  async updateError(projectId: string, errorId: string, operation: string, options?: any): Promise<boolean> {
+    const errorUpdateRequest = {
+      operation: operation,
+      ...options
+    };
+    const response = await this.errorsApi.updateErrorOnProject(projectId, errorId, errorUpdateRequest);
+    return response.status === 200 || response.status === 204;
   }
 
   registerTools(server: McpServer): void {
@@ -224,8 +240,13 @@ export class InsightHubClient implements Client {
               const page = args.page || 1;
               projects = projects.slice((page - 1) * pageSize, page * pageSize);
             }
+
+            const result = {
+              data: projects,
+              count: projects.length,
+            }
             return {
-              content: [{ type: "text", text: JSON.stringify(projects) }],
+              content: [{ type: "text", text: JSON.stringify(result) }],
             };
           } catch (e) {
             Bugsnag.notify(e as unknown as Error);
@@ -474,7 +495,8 @@ export class InsightHubClient implements Client {
                   "user.email": [{ "type": "eq", "value": "user@example.com" }],
                   "event.since": [{ "type": "eq", "value": "24h" }]
                 }
-              }
+              },
+              "JSON object with a list of errors in the 'data' field, and an error count in the 'count' field"
             )
           ],
           hints: [
@@ -508,9 +530,13 @@ export class InsightHubClient implements Client {
               }
             }
           }
-          const response = await this.listProjectErrors(projectId, args.filters);
+          const errors = await this.listProjectErrors(projectId, args.filters);
+          const result = {
+            data: errors,
+            count: errors.length,
+          };
           return {
-            content: [{ type: "text", text: JSON.stringify(response) }],
+            content: [{ type: "text", text: JSON.stringify(result) }],
           };
         } catch (e) {
           Bugsnag.notify(e as unknown as Error);
@@ -551,6 +577,111 @@ export class InsightHubClient implements Client {
           if (!eventFields) throw new Error("No event filters found in cache.");
           return {
             content: [{ type: "text", text: JSON.stringify(eventFields) }],
+          };
+        } catch (e) {
+          Bugsnag.notify(e as unknown as Error);
+          throw e;
+        }
+      }
+    );
+
+    const permittedOperations = [
+      "override_severity",
+      "open",
+      "fix",
+      "ignore",
+      "discard",
+      "undiscard"
+    ] as const;
+
+    server.registerTool(
+      "update_error",
+      {
+        description: toolDescriptionTemplate({
+          summary: "Update the status of an error in Insight Hub",
+          purpose: "Change an error's workflow state, such as marking it as resolved or ignored",
+          useCases: [
+            "Mark an error as open, fixed or ignored",
+            "Discard or undiscard an error",
+            "Update the severity of an error"
+          ],
+          parameters: [
+            createParameter(
+              "errorId",
+              "string",
+              true,
+              "ID of the error to update",
+              {
+                examples: ["6863e2af8c857c0a5023b411"]
+              }
+            ),
+            createParameter(
+              "operation",
+              "string",
+              true,
+              "The operation to apply to the error",
+              {
+                examples: ["fix", "open", "ignore", "discard", "undiscard"]
+              }
+            )
+          ],
+          examples: [
+            createExample(
+              "Mark an error as fixed",
+              {
+                errorId: "6863e2af8c857c0a5023b411",
+                operation: "fix"
+              },
+              "Success response indicating the error was marked as fixed"
+            )
+          ],
+          hints: [
+            "Only use valid operations - Insight Hub may reject invalid values"
+          ]
+        }),
+        inputSchema: {
+          errorId: z.string().describe("ID of the error to update"),
+          operation: z.enum(permittedOperations).describe("The operation to apply to the error")
+        },
+        annotations: {
+          title: "Update an Insight Hub Error",
+          readOnlyHint: false,
+          destructiveHint: true,
+          idempotentHint: false,
+          openWorldHint: true
+        }
+      },
+      async (args, _extra) => {
+        const { errorId, operation } = args;
+        try {
+          const projectId = this.cache.get<Project>(cacheKeys.CURRENT_PROJECT)?.id;
+
+          let severity = undefined;
+          if (operation === 'override_severity') {
+            // illicit the severity from the user
+            const result = await server.server.elicitInput({
+              message: "Please provide the new severity for the error (e.g. 'info', 'warning', 'error', 'critical')",
+              requestedSchema: {
+                type: "object",
+                properties: {
+                  severity: {
+                    type: "string",
+                    enum: ['info', 'warning', 'error'],
+                    description: "The new severity level for the error"
+                  }
+                }
+              },
+              required: ["severity"]
+            })
+
+            if (result.action === "accept" && result.content?.severity) {
+              severity = result.content.severity;
+            }
+          }
+
+          const result = await this.updateError(projectId!, errorId, operation, { severity });
+          return {
+            content: [{ type: "text", text: JSON.stringify({ success: result }) }],
           };
         } catch (e) {
           Bugsnag.notify(e as unknown as Error);
