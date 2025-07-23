@@ -8,6 +8,7 @@
   <h1>SmartBear MCP server</h1>
 </div>
 
+[![Node CI](https://github.com/SmartBear/smartbear-mcp/actions/workflows/node-ci.yml/badge.svg)](https://github.com/SmartBear/smartbear-mcp/actions/workflows/node-ci.yml)
 [![Documentation](https://img.shields.io/badge/documentation-latest-blue.svg)](https://developer.smartbear.com/smartbear-mcp)
 
 A Model Context Protocol (MCP) server that provides AI assistants with seamless access to SmartBear's suite of testing and monitoring tools, including Insight Hub, Reflect, and API Hub.
@@ -42,7 +43,7 @@ Add the [`@smartbear/mcp`](https://www.npmjs.com/package/@smartbear/mcp) package
 If setting up manually, add the following configuration to `.vscode/mcp.json`:
 
 <details>
-<summary><strong>📋 Click to expand NMP-based configuration</strong></summary>
+<summary><strong>📋 Click to expand NPM-based configuration</strong></summary>
 ```json
 {
   "servers": {
