@@ -120,13 +120,17 @@ jobs:
 
                 console.log(`✅ Created PR #${pr.data.number}: ${pr.data.html_url}`);
 
-                // Request review from team
-                await github.rest.pulls.requestReviewers({
-                  owner,
-                  repo,
-                  pull_number: pr.data.number,
-                  team_reviewers: ["bugsnag-dev"]
-                });
+                // Request review from team (tolerate errors)
+                try {
+                  await github.rest.pulls.requestReviewers({
+                    owner,
+                    repo,
+                    pull_number: pr.data.number,
+                    team_reviewers: ["bugsnag-dev"]
+                  });
+                } catch (e) {
+                  console.log('Reviewer request skipped or failed:', e.message);
+                }
 
                 // Enable auto-merge (requires GraphQL)
                 const enableAutoMergeQuery = `
